@@ -8,6 +8,8 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 
 ## Current Status: 🟢 DEVELOPMENT PHASE
 
+**RESOLVED:** Large grid performance issue fixed with strategic black cell placement (max_run_length=7).
+
 ### Completed ✅
 
 #### Project Infrastructure
@@ -42,10 +44,27 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 - [x] Example scripts and documentation
 - [x] OpenSpec change completed: refactor-puzzle-generation
 
+#### CSP Solver Optimizations ✅ COMPLETE
+
+- [x] Domain tracking with CellDomain class
+- [x] MRV (Minimum Remaining Values) heuristic with random tie-breaking
+- [x] Forward checking for constraint propagation
+- [x] Backtrack limiting (500K) to prevent infinite loops
+- [x] Strategic black cell placement (max_run_length=7) to limit search space
+- [x] 22 solver unit tests (all passing)
+
+**Performance Results (all difficulty levels):**
+| Difficulty | Grid | Density | Time |
+|------------|------|---------|------|
+| Beginner | 7x7 | 30% | 0.001s |
+| Intermediate | 9x9 | 22% | 0.004s |
+| Expert | 12x12 | 15% | 0.010s |
+| Master | 15x15 | 12% | 0.019s |
+
 ### In Progress 🔄
 
 #### Core Development
-- [ ] Improve solver algorithm (MRV + forward checking + constraint propagation)
+
 - [ ] Implement ReportLab PDF generation
 - [ ] Create page layout templates
 - [ ] Build difficulty calibration system

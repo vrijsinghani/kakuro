@@ -140,6 +140,7 @@ def solve_kakuro(
     vertical_runs: List[Run],
     randomize: bool = True,
     use_csp: bool = True,
+    max_backtracks: int = 2000000,
 ) -> bool:
     """
     Solve a Kakuro grid using backtracking algorithm with CSP heuristics.
@@ -154,6 +155,7 @@ def solve_kakuro(
         vertical_runs: List of vertical runs
         randomize: Whether to randomize digit order for variety
         use_csp: Whether to use CSP heuristics (MRV, forward checking)
+        max_backtracks: Maximum number of backtrack steps before giving up
 
     Returns:
         True if solution found, False otherwise
@@ -168,15 +170,21 @@ def solve_kakuro(
 
     logger.debug(f"Solving puzzle with {len(empty_cells)} empty cells")
 
+    # Initialize backtrack counter
+    backtrack_counter = {"count": 0, "max": max_backtracks}
+
     if use_csp:
         # Initialize domains for CSP solving
         domains = _initialize_domains(grid, empty_cells)
         logger.debug("Using CSP heuristics (MRV + forward checking)")
 
         # Solve using CSP-enhanced backtracking
-        if _backtrack_csp(grid, domains, horizontal_runs, vertical_runs, randomize):
+        if _backtrack_csp(
+            grid, domains, horizontal_runs, vertical_runs, randomize, backtrack_counter
+        ):
             compute_run_totals(grid, horizontal_runs, vertical_runs)
-            logger.info("Puzzle solved successfully with CSP")
+            backtracks = backtrack_counter["count"]
+            logger.info(f"Puzzle solved with CSP ({backtracks} backtracks)")
             return True
     else:
         # Solve using basic backtracking (legacy)
@@ -185,7 +193,10 @@ def solve_kakuro(
             logger.info("Puzzle solved successfully")
             return True
 
-    logger.warning("No solution found")
+    if backtrack_counter["count"] >= max_backtracks:
+        logger.warning(f"Exceeded max backtracks ({max_backtracks})")
+    else:
+        logger.warning("No solution found")
     return False
 
 
@@ -194,6 +205,9 @@ def _initialize_domains(
 ) -> Dict[Tuple[int, int], CellDomain]:
     """
     Initialize domains for all empty cells.
+
+    Each cell starts with domain {1-9}, but we immediately remove
+    any values that are already used in the same runs.
 
     Args:
         grid: The puzzle grid
@@ -217,6 +231,9 @@ def _select_mrv_cell(
     This heuristic chooses the empty cell with the fewest valid values,
     which tends to fail faster and reduce the search space.
 
+    Tie-breaking: Among cells with same domain size, randomly select one
+    to avoid getting stuck in the same search path.
+
     Args:
         grid: The puzzle grid
         domains: Dictionary of cell domains
@@ -225,7 +242,7 @@ def _select_mrv_cell(
         (row, col) of cell with minimum remaining values, or None if all filled
     """
     min_count = float("inf")
-    best_cell = None
+    best_cells = []
 
     for (row, col), domain in domains.items():
         if grid.is_empty(row, col):
@@ -235,9 +252,16 @@ def _select_mrv_cell(
                 return None
             if count < min_count:
                 min_count = count
-                best_cell = (row, col)
+                best_cells = [(row, col)]
+            elif count == min_count:
+                # Tie: collect all cells with same minimum count
+                best_cells.append((row, col))
 
-    return best_cell
+    if not best_cells:
+        return None
+
+    # Randomly select among tied cells to diversify search
+    return random.choice(best_cells)
 
 
 def _backtrack_csp(
@@ -246,6 +270,7 @@ def _backtrack_csp(
     h_runs: List[Run],
     v_runs: List[Run],
     randomize: bool,
+    backtrack_counter: dict,
 ) -> bool:
     """
     CSP-enhanced backtracking with MRV and forward checking.
@@ -256,10 +281,17 @@ def _backtrack_csp(
         h_runs: Horizontal runs
         v_runs: Vertical runs
         randomize: Whether to randomize digit order
+        backtrack_counter: Dict with 'count' and 'max' for limiting search
 
     Returns:
         True if solution found from this state
     """
+    # Check if we've exceeded max backtracks (check every 1000 calls to reduce overhead)
+    backtrack_counter["count"] += 1
+    if backtrack_counter["count"] % 1000 == 0:
+        if backtrack_counter["count"] >= backtrack_counter["max"]:
+            return False
+
     # Select cell using MRV heuristic
     cell = _select_mrv_cell(grid, domains)
 
@@ -290,10 +322,12 @@ def _backtrack_csp(
             # Check if forward checking created empty domains
             if removed_values is not None:
                 # Recurse
-                if _backtrack_csp(grid, domains, h_runs, v_runs, randomize):
+                if _backtrack_csp(
+                    grid, domains, h_runs, v_runs, randomize, backtrack_counter
+                ):
                     return True
 
-                # Backtrack: restore domains
+                # Backtrack: restore forward checked domains
                 _restore_domains(domains, removed_values)
 
             # Backtrack: remove digit
@@ -374,6 +408,195 @@ def _restore_domains(
     for (row, col), value in removed_values:
         if (row, col) in domains:
             domains[(row, col)].restore(value)
+
+
+def _propagate_constraints(
+    grid: Grid,
+    row: int,
+    col: int,
+    domains: Dict[Tuple[int, int], CellDomain],
+    h_runs: List[Run],
+    v_runs: List[Run],
+) -> Optional[List[Tuple[Tuple[int, int], int]]]:
+    """
+    Propagate constraints after placing a digit.
+
+    Eliminates values from domains based on run sum constraints:
+    - If remaining sum is too small for remaining cells, eliminate large values
+    - If remaining sum is too large for remaining cells, eliminate small values
+    - If only one cell remains, set its domain to the exact required value
+
+    Args:
+        grid: The puzzle grid
+        row: Row of placed digit
+        col: Column of placed digit
+        domains: Dictionary of cell domains
+        h_runs: Horizontal runs
+        v_runs: Vertical runs
+
+    Returns:
+        List of ((row, col), value) tuples that were removed, or None if
+        constraint propagation fails (empty domain created)
+    """
+    removed = []
+
+    # Propagate constraints for horizontal run
+    h_cells = _get_run_cells_for_position(row, col, h_runs, Direction.HORIZONTAL)
+    if h_cells:
+        h_run = _get_run_for_position(row, col, h_runs, Direction.HORIZONTAL)
+        if h_run:
+            propagated = _propagate_run_constraints(grid, h_cells, h_run, domains)
+            if propagated is None:
+                _restore_domains(domains, removed)
+                return None
+            removed.extend(propagated)
+
+    # Propagate constraints for vertical run
+    v_cells = _get_run_cells_for_position(row, col, v_runs, Direction.VERTICAL)
+    if v_cells:
+        v_run = _get_run_for_position(row, col, v_runs, Direction.VERTICAL)
+        if v_run:
+            propagated = _propagate_run_constraints(grid, v_cells, v_run, domains)
+            if propagated is None:
+                _restore_domains(domains, removed)
+                return None
+            removed.extend(propagated)
+
+    return removed
+
+
+def _get_run_for_position(
+    row: int, col: int, runs: List[Run], direction: Direction
+) -> Optional[Run]:
+    """
+    Get the run that contains the given position.
+
+    Args:
+        row: Row index
+        col: Column index
+        runs: List of runs to search
+        direction: Direction of runs to check
+
+    Returns:
+        The Run object, or None if not in a run
+    """
+    for run in runs:
+        if direction == Direction.HORIZONTAL:
+            if run.row == row and run.col <= col < run.col + run.length:
+                return run
+        else:  # VERTICAL
+            if run.col == col and run.row <= row < run.row + run.length:
+                return run
+    return None
+
+
+def _propagate_run_constraints(
+    grid: Grid,
+    cells: List[Tuple[int, int]],
+    run: Run,
+    domains: Dict[Tuple[int, int], CellDomain],
+) -> Optional[List[Tuple[Tuple[int, int], int]]]:
+    """
+    Propagate constraints for a single run.
+
+    Eliminates values based on:
+    1. Values already used in the run (redundant with forward checking)
+    2. Minimum/maximum possible sums for remaining cells
+    3. Exact value if only one cell remains
+
+    Args:
+        grid: The puzzle grid
+        cells: List of cells in the run
+        run: The Run object with target sum
+        domains: Dictionary of cell domains
+
+    Returns:
+        List of removed values, or None if propagation fails
+    """
+    removed = []
+
+    # Get empty cells in this run
+    empty_cells = [(r, c) for r, c in cells if grid.is_empty(r, c)]
+
+    if not empty_cells:
+        return removed
+
+    # Get filled values and current sum
+    filled_values = set()
+    current_sum = 0
+    for r, c in cells:
+        if not grid.is_empty(r, c):
+            value = grid.get_cell(r, c)
+            filled_values.add(value)
+            current_sum += value
+
+    # Calculate remaining sum needed (if run has a total set)
+    # Note: During generation, run.total is 0, so skip sum-based propagation
+    if run.total > 0:
+        remaining_sum = run.total - current_sum
+        num_empty = len(empty_cells)
+
+        # If only one empty cell, it must equal remaining sum
+        if num_empty == 1:
+            r, c = empty_cells[0]
+            if (r, c) in domains:
+                # Keep only the exact value needed
+                for value in range(1, 10):
+                    if value != remaining_sum and value in domains[(r, c)].get_values():
+                        if domains[(r, c)].remove(value):
+                            removed.append(((r, c), value))
+
+                if domains[(r, c)].is_empty():
+                    _restore_domains(domains, removed)
+                    return None
+
+        # For multiple empty cells, eliminate impossible values
+        elif num_empty > 1:
+            # Calculate min/max possible sums for other cells
+            for r, c in empty_cells:
+                if (r, c) not in domains:
+                    continue
+
+                # For this cell, what values are possible?
+                cell_domain = domains[(r, c)].get_values()
+
+                for value in list(cell_domain):
+                    # Check if this value can lead to a valid sum
+                    # Min sum of others: smallest (num_empty-1) distinct values
+                    # Max sum of others: largest (num_empty-1) distinct values
+
+                    # Get available values for other cells
+                    # (excluding this value and filled values)
+                    available = set(range(1, 10)) - filled_values - {value}
+
+                    if len(available) < num_empty - 1:
+                        # Not enough distinct values available
+                        if domains[(r, c)].remove(value):
+                            removed.append(((r, c), value))
+                            if domains[(r, c)].is_empty():
+                                _restore_domains(domains, removed)
+                                return None
+                        continue
+
+                    # Calculate min/max possible sums for other cells
+                    sorted_available = sorted(available)
+                    min_others = sum(sorted_available[: num_empty - 1])
+                    max_others = sum(sorted_available[-(num_empty - 1) :])
+
+                    needed_from_others = remaining_sum - value
+
+                    # If needed sum is impossible, eliminate this value
+                    if (
+                        needed_from_others < min_others
+                        or needed_from_others > max_others
+                    ):
+                        if domains[(r, c)].remove(value):
+                            removed.append(((r, c), value))
+                            if domains[(r, c)].is_empty():
+                                _restore_domains(domains, removed)
+                                return None
+
+    return removed
 
 
 def _backtrack(

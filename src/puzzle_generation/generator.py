@@ -34,6 +34,7 @@ def generate_puzzle(
     black_density: float = 0.22,
     seed: Optional[int] = None,
     max_attempts: int = 10,
+    max_run_length: int = 7,
 ) -> Puzzle:
     """
     Generate a valid Kakuro puzzle.
@@ -44,6 +45,7 @@ def generate_puzzle(
         black_density: Proportion of black cells (0.15-0.30 recommended)
         seed: Random seed for reproducibility
         max_attempts: Maximum generation attempts before giving up
+        max_run_length: Maximum allowed run length (default 7, prevents hard puzzles)
 
     Returns:
         A valid Puzzle object with unique solution
@@ -76,7 +78,9 @@ def generate_puzzle(
         logger.debug(f"Generation attempt {attempt}/{max_attempts}")
 
         try:
-            grid, h_runs, v_runs = _generate_kakuro(height, width, black_density)
+            grid, h_runs, v_runs = _generate_kakuro(
+                height, width, black_density, max_run_length
+            )
 
             puzzle = Puzzle(grid=grid, horizontal_runs=h_runs, vertical_runs=v_runs)
 
@@ -97,22 +101,24 @@ def generate_puzzle(
 
 
 def _generate_kakuro(
-    height: int, width: int, black_density: float
+    height: int, width: int, black_density: float, max_run_length: int = 7
 ) -> Tuple[Grid, list, list]:
     """
     Generate a single Kakuro puzzle.
 
-    This follows the algorithm from the original kakurov2.py:
+    This follows an improved algorithm:
     1. Create grid with edges as black cells
     2. Randomly place black cells based on density
-    3. Clean up isolated cells
-    4. Compute runs
-    5. Solve the puzzle
+    3. Strategically add black cells to limit run lengths
+    4. Clean up isolated cells
+    5. Compute runs
+    6. Solve the puzzle
 
     Args:
         height: Grid height
         width: Grid width
         black_density: Proportion of black cells
+        max_run_length: Maximum allowed run length (prevents exponentially hard puzzles)
 
     Returns:
         Tuple of (grid, horizontal_runs, vertical_runs)
@@ -137,6 +143,9 @@ def _generate_kakuro(
 
     grid = Grid(height=height, width=width, cells=cells)
 
+    # Break up long runs by strategically placing additional black cells
+    _limit_run_lengths(grid, max_run_length)
+
     # Clean up isolated cells (iterative process)
     _cleanup_grid(grid)
 
@@ -146,10 +155,94 @@ def _generate_kakuro(
     logger.debug(f"Found {len(h_runs)} horizontal and {len(v_runs)} vertical runs")
 
     # Solve the puzzle to validate and compute clues
-    if not solve_kakuro(grid, h_runs, v_runs, randomize=True):
-        raise Exception("Generated grid is unsolvable")
+    # Use CSP solver with backtrack limit - if exceeded, grid layout is too hard
+    if not solve_kakuro(
+        grid, h_runs, v_runs, randomize=True, use_csp=True, max_backtracks=500000
+    ):
+        raise Exception(
+            "Generated grid is too difficult to solve (exceeded backtrack limit)"
+        )
 
     return grid, h_runs, v_runs
+
+
+def _limit_run_lengths(grid: Grid, max_run_length: int) -> None:
+    """
+    Break up runs that exceed the maximum length by placing black cells.
+
+    This is crucial for making large grids solvable. Long runs create exponentially
+    hard search spaces. For example, a 9-cell run has 9! = 362,880 possible digit
+    arrangements before considering constraints.
+
+    Args:
+        grid: The grid to modify (modified in place)
+        max_run_length: Maximum allowed run length (typically 6-7)
+    """
+    changed = True
+    iterations = 0
+    max_iterations = 20  # Prevent infinite loops
+
+    while changed and iterations < max_iterations:
+        changed = False
+        iterations += 1
+
+        # Check horizontal runs
+        for row in range(1, grid.height):
+            run_start = None
+            run_length = 0
+
+            for col in range(1, grid.width):
+                if grid.is_black(row, col):
+                    run_start = None
+                    run_length = 0
+                else:
+                    if run_start is None:
+                        run_start = col
+                    run_length += 1
+
+                    # If run exceeds max length, place a black cell to break it
+                    if run_length > max_run_length:
+                        # Place black cell at optimal position (middle-ish of run)
+                        # This creates two shorter runs instead of one long one
+                        break_col = run_start + max_run_length // 2
+                        grid.set_cell(row, break_col, CellType.BLACK.value)
+                        logger.debug(
+                            f"Breaking long horizontal run at ({row}, {break_col})"
+                        )
+                        changed = True
+                        run_start = None
+                        run_length = 0
+
+        # Check vertical runs
+        for col in range(1, grid.width):
+            run_start = None
+            run_length = 0
+
+            for row in range(1, grid.height):
+                if grid.is_black(row, col):
+                    run_start = None
+                    run_length = 0
+                else:
+                    if run_start is None:
+                        run_start = row
+                    run_length += 1
+
+                    # If run exceeds max length, place a black cell to break it
+                    if run_length > max_run_length:
+                        # Place black cell at optimal position
+                        break_row = run_start + max_run_length // 2
+                        grid.set_cell(break_row, col, CellType.BLACK.value)
+                        logger.debug(
+                            f"Breaking long vertical run at ({break_row}, {col})"
+                        )
+                        changed = True
+                        run_start = None
+                        run_length = 0
+
+    if iterations >= max_iterations:
+        logger.warning(f"_limit_run_lengths hit max iterations ({max_iterations})")
+    else:
+        logger.debug(f"Run lengths limited after {iterations} iteration(s)")
 
 
 def _cleanup_grid(grid: Grid, max_iterations: int = 50) -> None:
