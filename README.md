@@ -6,6 +6,13 @@ Automated system for generating professional, print-ready Kakuro puzzle books fo
 
 This project capitalizes on a high-demand, low-competition market opportunity: **Kakuro puzzle books**. With ~36,635 monthly searches and exceptionally few existing books on Amazon, Kakuro represents an ideal niche for KDP publishing.
 
+## Documentation
+
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Git workflow, commit conventions, and coding standards
+- **[.github/GIT_CHEATSHEET.md](.github/GIT_CHEATSHEET.md)** - Quick reference for common git operations
+- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Current project status and roadmap
+- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Development environment setup instructions
+
 ### What is Kakuro?
 
 Kakuro is a logic puzzle that combines elements of crosswords and Sudoku. Players fill white cells with digits 1-9 such that each "run" (horizontal or vertical sequence) sums to a given clue number, with no repeated digits within a run.
