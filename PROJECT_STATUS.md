@@ -6,7 +6,7 @@
 
 This project generates professional Kakuro puzzle books for Amazon KDP publishing, targeting a high-demand, low-competition market niche.
 
-## Current Status: 🟡 SETUP PHASE
+## Current Status: 🟢 DEVELOPMENT PHASE
 
 ### Completed ✅
 
@@ -19,6 +19,8 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 - [x] Requirements file with all dependencies
 - [x] Setup guide for new developers
 - [x] Git repository initialized with `.gitignore`
+- [x] Code quality tools configured (black, flake8, mypy)
+- [x] Pre-commit hooks for automated checks
 
 #### Documentation
 - [x] Market research completed (`docs/kdp_niche_research_2026.md`)
@@ -26,19 +28,24 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 - [x] Tech stack defined (Python, ReportLab, Pillow)
 - [x] KDP publishing requirements documented
 - [x] Portfolio management strategy outlined
+- [x] OpenSpec workflow established
 
-#### Initial Code
-- [x] Basic puzzle generation algorithm (`docs/kakurov2.py`)
-  - Grid generation with black cells
-  - Run computation (horizontal/vertical)
-  - Backtracking solver for validation
-  - Basic matplotlib rendering
+#### Puzzle Generation Module ✅ COMPLETE
+- [x] Modular architecture (models, runs, solver, generator, config)
+- [x] Data models with type hints (Grid, Run, Puzzle)
+- [x] Run detection and computation
+- [x] Backtracking solver with constraint validation
+- [x] Configurable puzzle generator
+- [x] Configuration management system (PuzzleConfig)
+- [x] Difficulty profiles (beginner, intermediate, expert, master)
+- [x] Comprehensive test suite (65 tests, all passing)
+- [x] Example scripts and documentation
+- [x] OpenSpec change completed: refactor-puzzle-generation
 
 ### In Progress 🔄
 
 #### Core Development
-- [ ] Migrate existing code to `src/` structure
-- [ ] Refactor puzzle generation for modularity
+- [ ] Improve solver algorithm (MRV + forward checking + constraint propagation)
 - [ ] Implement ReportLab PDF generation
 - [ ] Create page layout templates
 - [ ] Build difficulty calibration system
@@ -46,10 +53,11 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 ### Pending ⏳
 
 #### Phase 1: Core Functionality
-- [ ] **Puzzle Generation Module** (`src/puzzle_generation/`)
-  - [ ] Refactor existing generator code
+- [x] **Puzzle Generation Module** (`src/puzzle_generation/`) ✅ COMPLETE
+  - [x] Refactor existing generator code
+  - [ ] Improve solver algorithm (MRV + forward checking)
   - [ ] Add difficulty scoring algorithm
-  - [ ] Implement puzzle validation
+  - [x] Implement puzzle validation
   - [ ] Create batch generation utilities
   - [ ] Add progress tracking
 
@@ -207,27 +215,25 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 
 ## Next Actions (Priority Order)
 
-1. **Set up development environment**
-   - Install Python dependencies
-   - Download fonts to `assets/fonts/`
-   - Verify ReportLab installation
+1. **Improve solver algorithm** ⚡ HIGH PRIORITY
+   - Implement MRV (Minimum Remaining Values) heuristic
+   - Add forward checking for constraint propagation
+   - Enable generation of larger puzzles (12x12, 15x15)
+   - Add performance benchmarks
 
-2. **Refactor existing code**
-   - Move `docs/kakurov2.py` to `src/puzzle_generation/generator.py`
-   - Add proper module structure
-   - Write unit tests
-
-3. **Implement ReportLab PDF generation**
+2. **Implement ReportLab PDF generation**
    - Create basic page template
    - Render single puzzle to PDF
    - Add solution page
+   - Ensure PDF/X-1a compliance
 
-4. **Build batch generation**
+3. **Build batch generation**
    - Generate 10 test puzzles
    - Create test PDF
    - Validate with KDP Previewer
+   - Add progress tracking
 
-5. **Create first book**
+4. **Create first book**
    - Generate 500 beginner puzzles
    - Assemble complete interior PDF
    - Design cover
