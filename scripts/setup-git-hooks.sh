@@ -16,8 +16,8 @@ cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 
 echo "🔍 Running pre-commit checks..."
 
-# Check if Python files are being committed
-PYTHON_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' || true)
+# Check if Python files are being committed (exclude third-party fonts)
+PYTHON_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' | grep -v '^assets/fonts/' || true)
 
 if [ -n "$PYTHON_FILES" ]; then
     echo "📝 Formatting Python files with Black..."
