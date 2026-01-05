@@ -33,6 +33,7 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 - [x] OpenSpec workflow established
 
 #### Puzzle Generation Module ✅ COMPLETE
+
 - [x] Modular architecture (models, runs, solver, generator, config)
 - [x] Data models with type hints (Grid, Run, Puzzle)
 - [x] Run detection and computation
@@ -40,7 +41,7 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 - [x] Configurable puzzle generator
 - [x] Configuration management system (PuzzleConfig)
 - [x] Difficulty profiles (beginner, intermediate, expert, master)
-- [x] Comprehensive test suite (65 tests, all passing)
+- [x] Comprehensive test suite (80 tests, all passing)
 - [x] Example scripts and documentation
 - [x] OpenSpec change completed: refactor-puzzle-generation
 
@@ -52,8 +53,10 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 - [x] Backtrack limiting (500K) to prevent infinite loops
 - [x] Strategic black cell placement (max_run_length=7) to limit search space
 - [x] 22 solver unit tests (all passing)
+- [x] OpenSpec change completed: improve-solver-algorithm
 
 **Performance Results (all difficulty levels):**
+
 | Difficulty | Grid | Density | Time |
 |------------|------|---------|------|
 | Beginner | 7x7 | 30% | 0.001s |
@@ -72,15 +75,17 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 ### Pending ⏳
 
 #### Phase 1: Core Functionality
+
 - [x] **Puzzle Generation Module** (`src/puzzle_generation/`) ✅ COMPLETE
   - [x] Refactor existing generator code
-  - [ ] Improve solver algorithm (MRV + forward checking)
-  - [ ] Add difficulty scoring algorithm
+  - [x] Improve solver algorithm (MRV + forward checking)
+  - [x] Strategic grid generation (max_run_length=7)
   - [x] Implement puzzle validation
+  - [ ] Add difficulty scoring algorithm
   - [ ] Create batch generation utilities
   - [ ] Add progress tracking
 
-- [ ] **PDF Generation Module** (`src/pdf_generation/`)
+- [ ] **PDF Generation Module** (`src/pdf_generation/`) 🔜 NEXT
   - [ ] Set up ReportLab infrastructure
   - [ ] Create page templates (puzzle, solution, instruction)
   - [ ] Implement font management
@@ -100,8 +105,8 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
   - [ ] KDP specification checker
   - [ ] Quality assurance tools
 
-- [ ] **Testing**
-  - [ ] Unit tests for puzzle generation
+- [x] **Testing** (Puzzle Generation)
+  - [x] Unit tests for puzzle generation (80 tests passing)
   - [ ] Integration tests for PDF creation
   - [ ] Validation test suite
   - [ ] Performance benchmarks
@@ -131,42 +136,50 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 ## Technical Debt
 
 ### Code Quality
-- [ ] Add type hints to all functions
+
+- [x] Add type hints to puzzle generation module
+- [ ] Add type hints to remaining modules
 - [ ] Improve error handling
 - [ ] Add comprehensive logging
-- [ ] Document all modules with docstrings
+- [x] Document puzzle generation module with docstrings
 
 ### Performance
-- [ ] Optimize puzzle generation speed
+
+- [x] Optimize puzzle generation speed (all sizes < 0.02s)
 - [ ] Reduce PDF generation time
 - [ ] Implement caching for repeated operations
 - [ ] Profile and optimize bottlenecks
 
 ### Testing
-- [ ] Achieve 80%+ test coverage
-- [ ] Add integration tests
+
+- [x] 80 tests for puzzle generation (100% passing)
+- [ ] Add integration tests for PDF
 - [ ] Create test fixtures
 - [ ] Set up CI/CD pipeline
 
 ## Milestones
 
 ### Milestone 1: MVP (Minimum Viable Product) - Target: Week 2
-- [ ] Generate valid Kakuro puzzles
+
+- [x] Generate valid Kakuro puzzles ✅
 - [ ] Create basic PDF with puzzles and solutions
 - [ ] Validate PDF meets KDP requirements
 
 ### Milestone 2: First Book - Target: Week 4
+
 - [ ] Complete interior PDF (500 puzzles)
 - [ ] Design and finalize cover
 - [ ] Prepare KDP listing metadata
 - [ ] Publish on Amazon KDP
 
 ### Milestone 3: Portfolio Launch - Target: Month 2
+
 - [ ] Publish 3 books (beginner, intermediate, large-print)
 - [ ] Set up performance tracking
 - [ ] Implement optimization based on feedback
 
 ### Milestone 4: Automation - Target: Month 3
+
 - [ ] Fully automated book generation
 - [ ] One-click PDF creation
 - [ ] Automated quality checks
@@ -234,23 +247,22 @@ This project generates professional Kakuro puzzle books for Amazon KDP publishin
 
 ## Next Actions (Priority Order)
 
-1. **Improve solver algorithm** ⚡ HIGH PRIORITY
-   - Implement MRV (Minimum Remaining Values) heuristic
-   - Add forward checking for constraint propagation
-   - Enable generation of larger puzzles (12x12, 15x15)
-   - Add performance benchmarks
-
-2. **Implement ReportLab PDF generation**
+1. **Implement ReportLab PDF generation** ⚡ HIGH PRIORITY
    - Create basic page template
    - Render single puzzle to PDF
    - Add solution page
    - Ensure PDF/X-1a compliance
 
-3. **Build batch generation**
+2. **Build batch generation**
    - Generate 10 test puzzles
    - Create test PDF
    - Validate with KDP Previewer
    - Add progress tracking
+
+3. **Add difficulty scoring algorithm**
+   - Analyze puzzle characteristics (run lengths, cell count, etc.)
+   - Create scoring formula
+   - Categorize puzzles by difficulty
 
 4. **Create first book**
    - Generate 500 beginner puzzles
