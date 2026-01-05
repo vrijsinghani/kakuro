@@ -5,16 +5,16 @@
 **Created:** 2026-01-05
 
 ## 1. Domain Tracking
-- [ ] 1.1 Add `CellDomain` class to track valid digits for each cell
-- [ ] 1.2 Initialize domains for all empty cells (1-9)
-- [ ] 1.3 Add domain update methods (remove value, restore value)
-- [ ] 1.4 Add domain query methods (get valid values, count remaining)
+- [x] 1.1 Add `CellDomain` class to track valid digits for each cell
+- [x] 1.2 Initialize domains for all empty cells (1-9)
+- [x] 1.3 Add domain update methods (remove value, restore value)
+- [x] 1.4 Add domain query methods (get valid values, count remaining)
 
 ## 2. MRV Heuristic
-- [ ] 2.1 Implement `select_mrv_cell()` function
-- [ ] 2.2 Find cell with minimum remaining values
-- [ ] 2.3 Handle tie-breaking (use degree heuristic or first found)
-- [ ] 2.4 Add tests for MRV cell selection
+- [x] 2.1 Implement `select_mrv_cell()` function
+- [x] 2.2 Find cell with minimum remaining values
+- [x] 2.3 Handle tie-breaking (use degree heuristic or first found)
+- [x] 2.4 Add tests for MRV cell selection
 
 ## 3. Forward Checking
 - [ ] 3.1 Implement `forward_check()` function
@@ -38,9 +38,9 @@
 - [ ] 5.5 Maintain backward compatibility with existing API
 
 ## 6. Testing
-- [ ] 6.1 Verify all existing tests still pass
-- [ ] 6.2 Add unit tests for domain tracking
-- [ ] 6.3 Add unit tests for MRV selection
+- [x] 6.1 Verify all existing tests still pass
+- [x] 6.2 Add unit tests for domain tracking
+- [x] 6.3 Add unit tests for MRV selection
 - [ ] 6.4 Add unit tests for forward checking
 - [ ] 6.5 Add unit tests for constraint propagation
 - [ ] 6.6 Add integration tests for full solver
@@ -61,9 +61,9 @@
 - [ ] 8.4 Update README with performance characteristics
 
 ## 9. Code Quality
-- [ ] 9.1 Add type hints to all new functions
-- [ ] 9.2 Run black formatter
-- [ ] 9.3 Run flake8 linter
+- [x] 9.1 Add type hints to all new functions
+- [x] 9.2 Run black formatter
+- [x] 9.3 Run flake8 linter
 - [ ] 9.4 Run mypy type checker
 - [ ] 9.5 Ensure all quality checks pass
 
@@ -75,8 +75,8 @@
 - [ ] 10.5 Test with example scripts
 
 ## Status Summary
-- **Completed:** 0/50 tasks (0%)
-- **Remaining:** 50 tasks
-- **Estimated Effort:** 4-6 hours
+- **Completed:** 14/50 tasks (28%)
+- **Remaining:** 36 tasks
+- **Estimated Effort:** 3-4 hours remaining
 - **Target:** Complete within 2 days
 

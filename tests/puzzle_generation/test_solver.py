@@ -1,7 +1,13 @@
 """Tests for puzzle solver module."""
 
 from src.puzzle_generation.models import Grid, Puzzle
-from src.puzzle_generation.solver import solve_puzzle, solve_kakuro
+from src.puzzle_generation.solver import (
+    solve_puzzle,
+    solve_kakuro,
+    CellDomain,
+    _initialize_domains,
+    _select_mrv_cell,
+)
 from src.puzzle_generation.runs import compute_runs
 
 
@@ -150,3 +156,138 @@ class TestSolveKakuro:
 
         # Should succeed because there are no constraints
         assert result is True
+
+
+class TestCellDomain:
+    """Tests for CellDomain class."""
+
+    def test_domain_initialization(self):
+        """Test domain is initialized with values 1-9."""
+        domain = CellDomain(0, 0)
+        assert domain.count() == 9
+        assert domain.get_values() == set(range(1, 10))
+
+    def test_domain_custom_initialization(self):
+        """Test domain with custom initial values."""
+        domain = CellDomain(0, 0, {1, 2, 3})
+        assert domain.count() == 3
+        assert domain.get_values() == {1, 2, 3}
+
+    def test_remove_value(self):
+        """Test removing a value from domain."""
+        domain = CellDomain(0, 0)
+        result = domain.remove(5)
+        assert result is True
+        assert 5 not in domain.get_values()
+        assert domain.count() == 8
+
+    def test_remove_nonexistent_value(self):
+        """Test removing a value not in domain."""
+        domain = CellDomain(0, 0, {1, 2, 3})
+        result = domain.remove(5)
+        assert result is False
+        assert domain.count() == 3
+
+    def test_restore_value(self):
+        """Test restoring a value to domain."""
+        domain = CellDomain(0, 0)
+        domain.remove(5)
+        domain.restore(5)
+        assert 5 in domain.get_values()
+        assert domain.count() == 9
+
+    def test_is_empty(self):
+        """Test checking if domain is empty."""
+        domain = CellDomain(0, 0, {1})
+        assert not domain.is_empty()
+        domain.remove(1)
+        assert domain.is_empty()
+
+
+class TestInitializeDomains:
+    """Tests for _initialize_domains function."""
+
+    def test_initialize_domains(self):
+        """Test initializing domains for empty cells."""
+        cells = [
+            [-1, -1, -1],
+            [-1, 0, 0],
+            [-1, 0, 0],
+        ]
+        grid = Grid(height=3, width=3, cells=cells)
+        empty_cells = [(1, 1), (1, 2), (2, 1), (2, 2)]
+
+        domains = _initialize_domains(grid, empty_cells)
+
+        assert len(domains) == 4
+        assert all(cell in domains for cell in empty_cells)
+        assert all(domains[cell].count() == 9 for cell in empty_cells)
+
+
+class TestSelectMRVCell:
+    """Tests for _select_mrv_cell function."""
+
+    def test_select_mrv_cell_all_equal(self):
+        """Test MRV selection when all domains are equal."""
+        cells = [
+            [-1, -1, -1],
+            [-1, 0, 0],
+            [-1, 0, 0],
+        ]
+        grid = Grid(height=3, width=3, cells=cells)
+        empty_cells = [(1, 1), (1, 2), (2, 1), (2, 2)]
+        domains = _initialize_domains(grid, empty_cells)
+
+        cell = _select_mrv_cell(grid, domains)
+        assert cell in empty_cells
+
+    def test_select_mrv_cell_different_sizes(self):
+        """Test MRV selection with different domain sizes."""
+        cells = [
+            [-1, -1, -1],
+            [-1, 0, 0],
+            [-1, 0, 0],
+        ]
+        grid = Grid(height=3, width=3, cells=cells)
+        empty_cells = [(1, 1), (1, 2), (2, 1), (2, 2)]
+        domains = _initialize_domains(grid, empty_cells)
+
+        # Reduce domain of (1, 1) to make it the MRV cell
+        domains[(1, 1)].remove(1)
+        domains[(1, 1)].remove(2)
+        domains[(1, 1)].remove(3)
+
+        cell = _select_mrv_cell(grid, domains)
+        assert cell == (1, 1)
+
+    def test_select_mrv_cell_empty_domain(self):
+        """Test MRV selection with empty domain."""
+        cells = [
+            [-1, -1, -1],
+            [-1, 0, 0],
+            [-1, 0, 0],
+        ]
+        grid = Grid(height=3, width=3, cells=cells)
+        empty_cells = [(1, 1), (1, 2)]
+        domains = _initialize_domains(grid, empty_cells)
+
+        # Empty the domain of (1, 1)
+        for i in range(1, 10):
+            domains[(1, 1)].remove(i)
+
+        cell = _select_mrv_cell(grid, domains)
+        assert cell is None  # Should return None when domain is empty
+
+    def test_select_mrv_cell_all_filled(self):
+        """Test MRV selection when all cells are filled."""
+        cells = [
+            [-1, -1, -1],
+            [-1, 1, 2],
+            [-1, 3, 4],
+        ]
+        grid = Grid(height=3, width=3, cells=cells)
+        empty_cells = [(1, 1), (1, 2), (2, 1), (2, 2)]
+        domains = _initialize_domains(grid, empty_cells)
+
+        cell = _select_mrv_cell(grid, domains)
+        assert cell is None  # All cells are filled
