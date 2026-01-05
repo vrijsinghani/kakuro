@@ -282,17 +282,98 @@ def _backtrack_csp(
             # Place digit
             grid.set_cell(row, col, digit)
 
-            # TODO: Forward checking will go here
+            # Forward checking: update domains of affected cells
+            removed_values = _forward_check(
+                grid, row, col, digit, domains, h_runs, v_runs
+            )
 
-            # Recurse
-            if _backtrack_csp(grid, domains, h_runs, v_runs, randomize):
-                return True
+            # Check if forward checking created empty domains
+            if removed_values is not None:
+                # Recurse
+                if _backtrack_csp(grid, domains, h_runs, v_runs, randomize):
+                    return True
 
-            # Backtrack
+                # Backtrack: restore domains
+                _restore_domains(domains, removed_values)
+
+            # Backtrack: remove digit
             grid.set_cell(row, col, 0)
-            # TODO: Restore domains will go here
 
     return False
+
+
+def _forward_check(
+    grid: Grid,
+    row: int,
+    col: int,
+    digit: int,
+    domains: Dict[Tuple[int, int], CellDomain],
+    h_runs: List[Run],
+    v_runs: List[Run],
+) -> Optional[List[Tuple[Tuple[int, int], int]]]:
+    """
+    Perform forward checking after placing a digit.
+
+    Removes the placed digit from domains of all cells in the same runs.
+    Returns the list of removed values for backtracking, or None if any
+    domain becomes empty.
+
+    Args:
+        grid: The puzzle grid
+        row: Row of placed digit
+        col: Column of placed digit
+        digit: The digit that was placed
+        domains: Dictionary of cell domains
+        h_runs: Horizontal runs
+        v_runs: Vertical runs
+
+    Returns:
+        List of ((row, col), value) tuples that were removed, or None if
+        forward checking fails (empty domain created)
+    """
+    removed = []
+
+    # Get cells in same horizontal run
+    h_cells = _get_run_cells_for_position(row, col, h_runs, Direction.HORIZONTAL)
+    for r, c in h_cells:
+        if (r, c) != (row, col) and (r, c) in domains and grid.is_empty(r, c):
+            if domains[(r, c)].remove(digit):
+                removed.append(((r, c), digit))
+                # Check if domain became empty
+                if domains[(r, c)].is_empty():
+                    # Restore what we removed and return None
+                    _restore_domains(domains, removed)
+                    return None
+
+    # Get cells in same vertical run
+    v_cells = _get_run_cells_for_position(row, col, v_runs, Direction.VERTICAL)
+    for r, c in v_cells:
+        if (r, c) != (row, col) and (r, c) in domains and grid.is_empty(r, c):
+            if domains[(r, c)].remove(digit):
+                removed.append(((r, c), digit))
+                # Check if domain became empty
+                if domains[(r, c)].is_empty():
+                    # Restore what we removed and return None
+                    _restore_domains(domains, removed)
+                    return None
+
+    return removed
+
+
+def _restore_domains(
+    domains: Dict[Tuple[int, int], CellDomain],
+    removed_values: List[Tuple[Tuple[int, int], int]],
+) -> None:
+    """
+    Restore domain values that were removed during forward checking.
+
+    Args:
+        domains: Dictionary of cell domains
+        removed_values: List of ((row, col), value) tuples to restore
+    """
+    for (row, col), value in removed_values:
+        if (row, col) in domains:
+            domains[(row, col)].restore(value)
 
 
 def _backtrack(

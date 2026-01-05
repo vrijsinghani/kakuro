@@ -7,6 +7,8 @@ from src.puzzle_generation.solver import (
     CellDomain,
     _initialize_domains,
     _select_mrv_cell,
+    _forward_check,
+    _restore_domains,
 )
 from src.puzzle_generation.runs import compute_runs
 
@@ -291,3 +293,102 @@ class TestSelectMRVCell:
 
         cell = _select_mrv_cell(grid, domains)
         assert cell is None  # All cells are filled
+
+
+class TestForwardChecking:
+    """Tests for forward checking functionality."""
+
+    def test_forward_check_removes_digit_from_horizontal_run(self):
+        """Test that forward checking removes digit from horizontal run cells."""
+        cells = [
+            [-1, -1, -1, -1],
+            [-1, 0, 0, 0],
+        ]
+        grid = Grid(height=2, width=4, cells=cells)
+        h_runs, v_runs = compute_runs(grid)
+        empty_cells = [(1, 1), (1, 2), (1, 3)]
+        domains = _initialize_domains(grid, empty_cells)
+
+        # Place digit 5 at (1, 1)
+        grid.set_cell(1, 1, 5)
+        removed = _forward_check(grid, 1, 1, 5, domains, h_runs, v_runs)
+
+        # Should remove 5 from (1, 2) and (1, 3)
+        assert removed is not None
+        assert len(removed) == 2
+        assert 5 not in domains[(1, 2)].get_values()
+        assert 5 not in domains[(1, 3)].get_values()
+
+    def test_forward_check_removes_digit_from_vertical_run(self):
+        """Test that forward checking removes digit from vertical run cells."""
+        cells = [
+            [-1, -1],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+        ]
+        grid = Grid(height=4, width=2, cells=cells)
+        h_runs, v_runs = compute_runs(grid)
+        empty_cells = [(1, 1), (2, 1), (3, 1)]
+        domains = _initialize_domains(grid, empty_cells)
+
+        # Place digit 3 at (1, 1)
+        grid.set_cell(1, 1, 3)
+        removed = _forward_check(grid, 1, 1, 3, domains, h_runs, v_runs)
+
+        # Should remove 3 from (2, 1) and (3, 1)
+        assert removed is not None
+        assert len(removed) == 2
+        assert 3 not in domains[(2, 1)].get_values()
+        assert 3 not in domains[(3, 1)].get_values()
+
+    def test_forward_check_returns_none_on_empty_domain(self):
+        """Test that forward checking returns None if a domain becomes empty."""
+        cells = [
+            [-1, -1, -1],
+            [-1, 0, 0],
+        ]
+        grid = Grid(height=2, width=3, cells=cells)
+        h_runs, v_runs = compute_runs(grid)
+        empty_cells = [(1, 1), (1, 2)]
+        domains = _initialize_domains(grid, empty_cells)
+
+        # Reduce domain of (1, 2) to only {5}
+        for i in range(1, 10):
+            if i != 5:
+                domains[(1, 2)].remove(i)
+
+        # Place digit 5 at (1, 1) - this should make (1, 2) empty
+        grid.set_cell(1, 1, 5)
+        removed = _forward_check(grid, 1, 1, 5, domains, h_runs, v_runs)
+
+        # Should return None and restore domains
+        assert removed is None
+        # Domain should be restored
+        assert 5 in domains[(1, 2)].get_values()
+
+    def test_restore_domains(self):
+        """Test restoring domains after backtracking."""
+        cells = [
+            [-1, -1, -1, -1],
+            [-1, 0, 0, 0],
+        ]
+        grid = Grid(height=2, width=4, cells=cells)
+        empty_cells = [(1, 1), (1, 2), (1, 3)]
+        domains = _initialize_domains(grid, empty_cells)
+
+        # Remove some values
+        domains[(1, 1)].remove(5)
+        domains[(1, 2)].remove(5)
+        domains[(1, 3)].remove(7)
+
+        # Create removed list
+        removed = [((1, 1), 5), ((1, 2), 5), ((1, 3), 7)]
+
+        # Restore
+        _restore_domains(domains, removed)
+
+        # Check values are restored
+        assert 5 in domains[(1, 1)].get_values()
+        assert 5 in domains[(1, 2)].get_values()
+        assert 7 in domains[(1, 3)].get_values()

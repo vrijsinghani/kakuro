@@ -17,11 +17,11 @@
 - [x] 2.4 Add tests for MRV cell selection
 
 ## 3. Forward Checking
-- [ ] 3.1 Implement `forward_check()` function
-- [ ] 3.2 Update domains of cells in same horizontal run
-- [ ] 3.3 Update domains of cells in same vertical run
-- [ ] 3.4 Track domain changes for backtracking
-- [ ] 3.5 Add tests for forward checking
+- [x] 3.1 Implement `forward_check()` function
+- [x] 3.2 Update domains of cells in same horizontal run
+- [x] 3.3 Update domains of cells in same vertical run
+- [x] 3.4 Track domain changes for backtracking
+- [x] 3.5 Add tests for forward checking
 
 ## 4. Constraint Propagation
 - [ ] 4.1 Implement `propagate_constraints()` function
@@ -31,17 +31,17 @@
 - [ ] 4.5 Add tests for constraint propagation
 
 ## 5. Integrate with Backtracking
-- [ ] 5.1 Update `_backtrack()` to use MRV for cell selection
-- [ ] 5.2 Update `_backtrack()` to use forward checking
+- [x] 5.1 Update `_backtrack()` to use MRV for cell selection
+- [x] 5.2 Update `_backtrack()` to use forward checking
 - [ ] 5.3 Update `_backtrack()` to propagate constraints
-- [ ] 5.4 Handle domain restoration on backtrack
-- [ ] 5.5 Maintain backward compatibility with existing API
+- [x] 5.4 Handle domain restoration on backtrack
+- [x] 5.5 Maintain backward compatibility with existing API
 
 ## 6. Testing
 - [x] 6.1 Verify all existing tests still pass
 - [x] 6.2 Add unit tests for domain tracking
 - [x] 6.3 Add unit tests for MRV selection
-- [ ] 6.4 Add unit tests for forward checking
+- [x] 6.4 Add unit tests for forward checking
 - [ ] 6.5 Add unit tests for constraint propagation
 - [ ] 6.6 Add integration tests for full solver
 
@@ -75,8 +75,8 @@
 - [ ] 10.5 Test with example scripts
 
 ## Status Summary
-- **Completed:** 14/50 tasks (28%)
-- **Remaining:** 36 tasks
-- **Estimated Effort:** 3-4 hours remaining
+- **Completed:** 23/50 tasks (46%)
+- **Remaining:** 27 tasks
+- **Estimated Effort:** 2-3 hours remaining
 - **Target:** Complete within 2 days
 
