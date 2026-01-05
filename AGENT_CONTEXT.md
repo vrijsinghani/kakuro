@@ -1,13 +1,14 @@
 # Agent Context - Kakuro Project
 
+> **For project status, current tasks, and roadmap:** See `PROJECT_STATUS.md`
+
 ## Quick Overview
 This is a **Kakuro Puzzle Book Generator** for Amazon KDP publishing. Solo developer project using Python, ReportLab for PDF generation, and targeting PDF/X-1a compliance for print-on-demand.
 
-## Current Status
-- **Phase:** SETUP PHASE (complete)
-- **Branch:** `develop` (5 commits ahead of `main`)
+## Technical Environment
 - **Python:** 3.10.12
 - **Package Manager:** `uv` (use `uv pip install` for dependencies)
+- **Primary Libraries:** ReportLab (PDF), Pillow (images), NumPy (numerical)
 
 ## Git Workflow
 
@@ -76,42 +77,26 @@ kakuro/
 
 ## Development Environment
 
-### Installed Dependencies
-- ✅ ReportLab 3.6.8 (PDF generation)
-- ✅ Pillow 10.2.0 (image processing)
-- ✅ NumPy 1.26.4 (numerical operations)
-- ✅ pytest 9.0.2 + pytest-cov 7.0.0 (testing)
-- ✅ black 25.12.0, flake8 7.3.0, mypy 1.19.1 (code quality)
-- ✅ Commercial fonts downloaded to `assets/fonts/`
-
-### To install dependencies:
+### Installing Dependencies
 ```bash
 uv pip install -r requirements.txt
 ```
 
-## Next Priority Tasks
+**Key dependencies:**
+- ReportLab (PDF generation)
+- Pillow (image processing)
+- NumPy (numerical operations)
+- pytest + pytest-cov (testing)
+- black, flake8, mypy (code quality)
 
-### **IMMEDIATE NEXT: Option 2 - Refactor Existing Code**
-The most critical task is to migrate the working puzzle generator:
-
-1. **Move** `docs/kakurov2.py` → `src/puzzle_generation/generator.py`
-2. **Refactor** into modular components:
-   - Separate grid generation, constraint solving, puzzle creation
-   - Add proper class structure
-   - Add type hints and docstrings
-3. **Write unit tests** for core functions
-4. **Integrate** with config system in `config/`
-
-### After Refactoring:
-- **Option 3:** Implement ReportLab PDF generation
-  - Create page templates
-  - Render puzzles to PDF
-  - Add solution pages
-  - Ensure PDF/X-1a compliance
+### Assets
+- Commercial fonts in `assets/fonts/` (Roboto, Open Sans, Noto Sans)
+- All fonts verified for commercial use in KDP publishing
 
 ## Key Documentation Files
+
+- **PROJECT_STATUS.md** - **START HERE** - Current status, tasks, and roadmap
 - **DEVELOPMENT.md** - Complete git workflow and coding standards
-- **PROJECT_STATUS.md** - Detailed project status and roadmap
 - **QUICKSTART.md** - Quick reference for daily workflow
 - **.github/GIT_CHEATSHEET.md** - Git command reference
 - **README.md** - Project overview
@@ -143,6 +128,7 @@ mypy src/                           # Type check
 ```
 
 ## What NOT to Do
+
 - ❌ Don't commit directly to `main`
 - ❌ Don't push without asking
 - ❌ Don't use `pip install` (use `uv pip install`)
@@ -151,8 +137,10 @@ mypy src/                           # Type check
 - ❌ Don't create new files unless necessary for the task
 
 ## Questions to Ask User
+
 If starting a new task, clarify:
-1. Should I work on Option 2 (refactoring) or something else?
+
+1. What task should I work on? (Check `PROJECT_STATUS.md` for priorities)
 2. Do you want me to push commits to remote?
 3. Should I create a feature branch or work on `develop`?
 4. Any specific coding patterns or preferences to follow?
