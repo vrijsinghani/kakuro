@@ -103,11 +103,12 @@ uv pip install -r requirements.txt
 
 ## Important Project Rules
 1. **Use `uv pip install`** for all package management (not plain `pip`)
-2. **Follow PEP 8** style guide
+2. **Follow PEP 8** style guide (black, flake8 --max-line-length=88 --extend-ignore=E203)
 3. **Write tests** for all new features (target 80%+ coverage)
 4. **Add type hints** to all functions
 5. **Write docstrings** for all public functions/classes
 6. **Fonts are commercial-use licensed** - verified for KDP publishing
+7. **OpenSpec workflow** - Use `openspec` for major changes (refactors, new features)
 
 ## Common Commands
 ```bash

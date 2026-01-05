@@ -13,20 +13,43 @@ project:
 # Puzzle Generation Settings
 # =============================================================================
 puzzle:
-  # Default grid dimensions
+  # Default grid dimensions (minimum 5x5)
   default_grid_size:
     width: 9
     height: 9
-  
-  # Black cell density (0.0 to 1.0)
-  black_density: 0.22
-  
+
+  # Grid size constraints
+  size_constraints:
+    min_width: 5
+    min_height: 5
+    max_width: 15
+    max_height: 15
+
+  # Black cell density (0.1 to 0.4)
+  # Lower density = more white cells = harder puzzles
+  # Higher density = more black cells = easier puzzles
+  black_density:
+    default: 0.22
+    min: 0.1
+    max: 0.4
+
   # Minimum run length (cells in a sequence)
   min_run_length: 2
-  
+
   # Maximum run length (limited by unique digits 1-9)
   max_run_length: 9
-  
+
+  # Solver settings
+  solver:
+    randomize: true  # Randomize digit order for varied solutions
+    max_iterations: 100000  # Maximum backtracking iterations
+
+  # Generator settings
+  generator:
+    max_attempts: 10  # Max attempts to generate valid puzzle
+    cleanup_iterations: 10  # Max iterations for grid cleanup
+    seed: null  # Random seed (null = random, int = reproducible)
+
   # Validation settings
   validation:
     max_generation_attempts: 50
@@ -38,22 +61,32 @@ puzzle:
 # =============================================================================
 difficulty:
   beginner:
-    grid_size: [6, 9]  # Range: 6x6 to 9x9
-    black_density: [0.25, 0.30]
-    avg_run_length: [2, 3]
-    complexity_score: [1, 3]
-  
+    grid_size:
+      width: 7
+      height: 7
+    black_density: 0.30  # More black cells = easier
+    description: "Smaller grids with shorter runs, ideal for newcomers"
+
   intermediate:
-    grid_size: [9, 12]  # Range: 9x9 to 12x12
-    black_density: [0.20, 0.25]
-    avg_run_length: [3, 5]
-    complexity_score: [4, 6]
-  
+    grid_size:
+      width: 9
+      height: 9
+    black_density: 0.22  # Balanced density
+    description: "Standard 9x9 grids with moderate complexity"
+
   expert:
-    grid_size: [12, 15]  # Range: 12x12 to 15x15
-    black_density: [0.15, 0.22]
-    avg_run_length: [4, 7]
-    complexity_score: [7, 10]
+    grid_size:
+      width: 12
+      height: 12
+    black_density: 0.15  # Fewer black cells = harder
+    description: "Large grids with longer runs and complex interactions"
+
+  master:
+    grid_size:
+      width: 15
+      height: 15
+    black_density: 0.12  # Very few black cells
+    description: "Maximum size grids for expert solvers"
 
 # =============================================================================
 # PDF Generation Settings (ReportLab)
