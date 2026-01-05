@@ -1,0 +1,216 @@
+# Kakuro Puzzle Book Generator - Default Configuration
+
+# =============================================================================
+# Project Information
+# =============================================================================
+project:
+  name: "Kakuro Puzzle Book Generator"
+  version: "0.1.0"
+  author: "Vikas Rijsinghani"
+  publisher: "Vikas Rijsinghani"
+
+# =============================================================================
+# Puzzle Generation Settings
+# =============================================================================
+puzzle:
+  # Default grid dimensions
+  default_grid_size:
+    width: 9
+    height: 9
+  
+  # Black cell density (0.0 to 1.0)
+  black_density: 0.22
+  
+  # Minimum run length (cells in a sequence)
+  min_run_length: 2
+  
+  # Maximum run length (limited by unique digits 1-9)
+  max_run_length: 9
+  
+  # Validation settings
+  validation:
+    max_generation_attempts: 50
+    require_unique_solution: true
+    timeout_seconds: 30
+
+# =============================================================================
+# Difficulty Profiles
+# =============================================================================
+difficulty:
+  beginner:
+    grid_size: [6, 9]  # Range: 6x6 to 9x9
+    black_density: [0.25, 0.30]
+    avg_run_length: [2, 3]
+    complexity_score: [1, 3]
+  
+  intermediate:
+    grid_size: [9, 12]  # Range: 9x9 to 12x12
+    black_density: [0.20, 0.25]
+    avg_run_length: [3, 5]
+    complexity_score: [4, 6]
+  
+  expert:
+    grid_size: [12, 15]  # Range: 12x12 to 15x15
+    black_density: [0.15, 0.22]
+    avg_run_length: [4, 7]
+    complexity_score: [7, 10]
+
+# =============================================================================
+# PDF Generation Settings (ReportLab)
+# =============================================================================
+pdf:
+  # Page settings
+  page:
+    # Standard KDP trim sizes (width, height in inches)
+    trim_sizes:
+      large: [8.5, 11.0]      # Letter size
+      standard: [8.0, 10.0]   # Slightly smaller
+      compact: [7.0, 10.0]    # Compact format
+    
+    # Margins (in inches)
+    margins:
+      top: 0.5
+      bottom: 0.5
+      left: 0.5
+      right: 0.5
+      gutter: 0.125  # Extra margin for binding (left side)
+    
+    # Bleed (in inches) - for full-bleed designs
+    bleed: 0.125
+  
+  # Typography
+  fonts:
+    # Default font family (must be available in assets/fonts/)
+    default_family: "Liberation Sans"
+    
+    # Font sizes (in points)
+    sizes:
+      title: 24
+      heading: 18
+      subheading: 14
+      body: 11
+      clue: 8
+      large_print_clue: 12
+      solution: 10
+  
+  # Colors (CMYK values for print)
+  colors:
+    black: [0, 0, 0, 100]
+    grid_line: [0, 0, 0, 80]
+    clue_text: [0, 0, 0, 100]
+    solution_text: [0, 0, 100, 0]  # Blue for solutions
+  
+  # Grid rendering
+  grid:
+    cell_size: 0.6  # inches
+    line_width: 1.0  # points
+    clue_position: "top-left"  # Position of clue numbers in black cells
+  
+  # PDF/X compliance
+  pdfx:
+    enabled: true
+    version: "PDF/X-1a:2001"
+    embed_fonts: true
+    color_mode: "CMYK"
+
+# =============================================================================
+# Book Layout Settings
+# =============================================================================
+layout:
+  # Puzzles per page
+  puzzles_per_page:
+    standard: 2  # 2 puzzles per page
+    large_print: 1  # 1 puzzle per page for large print
+  
+  # Page sections
+  sections:
+    cover: true
+    title_page: true
+    copyright_page: true
+    instructions: true
+    table_of_contents: false
+    puzzles: true
+    solutions: true
+  
+  # Instruction pages
+  instructions:
+    include_examples: true
+    include_solving_tips: true
+    pages: 3  # Number of instruction pages
+
+# =============================================================================
+# KDP Publishing Settings
+# =============================================================================
+kdp:
+  # Default categories (BISAC codes)
+  categories:
+    - "GAM003000"  # GAMES & ACTIVITIES / Logic & Brain Teasers
+    - "GAM017000"  # GAMES & ACTIVITIES / Sudoku
+  
+  # Pricing strategy (USD)
+  pricing:
+    beginner: 9.99
+    intermediate: 11.99
+    expert: 14.99
+    large_print_premium: 2.00  # Additional cost for large print
+  
+  # Royalty calculation
+  royalty:
+    rate_35: 0.35
+    rate_70: 0.70
+    rate_70_min_price: 2.99
+    rate_70_max_price: 9.99
+
+# =============================================================================
+# Output Settings
+# =============================================================================
+output:
+  # Directory paths (relative to project root)
+  paths:
+    puzzles: "output/puzzles"
+    interiors: "output/books/interiors"
+    covers: "output/books/covers"
+    final: "output/books/final"
+    previews: "output/previews"
+  
+  # File naming conventions
+  naming:
+    puzzle_file: "{difficulty}_{date}_{number}.json"
+    interior_pdf: "{title}_interior_v{version}.pdf"
+    cover_pdf: "{title}_cover_v{version}.pdf"
+  
+  # Preview generation
+  preview:
+    format: "jpg"
+    dpi: 150
+    quality: 85
+    pages: [1, 2, 3, 4, 5]  # Which pages to include in preview
+
+# =============================================================================
+# Quality Control Settings
+# =============================================================================
+quality:
+  # Validation checks
+  checks:
+    puzzle_solvability: true
+    unique_solution: true
+    pdf_compliance: true
+    kdp_specifications: true
+    font_embedding: true
+    color_mode: true
+  
+  # Performance benchmarks
+  benchmarks:
+    max_generation_time: 1.0  # seconds per puzzle
+    max_pdf_generation_time: 60.0  # seconds for full book
+    max_file_size_mb: 650  # KDP limit
+
+# =============================================================================
+# Logging Settings
+# =============================================================================
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/kakuro_generator.log"
+  console: true
+

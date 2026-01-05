@@ -1,0 +1,62 @@
+# Kakuro Puzzle Book Generator - Python Dependencies
+
+# ============================================================================
+# Core PDF Generation (Premium Quality)
+# ============================================================================
+reportlab>=4.0.0              # Professional PDF generation with print quality
+pillow>=10.0.0                # Image processing and manipulation
+
+# ============================================================================
+# Puzzle Generation & Validation
+# ============================================================================
+numpy>=1.24.0                 # Numerical operations for puzzle algorithms
+
+# ============================================================================
+# Optional: Enhanced Graphics
+# ============================================================================
+# cairosvg>=2.7.0             # Vector graphics rendering (uncomment if needed)
+# pycairo>=1.25.0             # Cairo graphics library (uncomment if needed)
+
+# ============================================================================
+# PDF Manipulation & Utilities
+# ============================================================================
+pypdf>=3.17.0                 # PDF reading, merging, and manipulation
+python-barcode>=0.15.0        # Barcode generation for ISBN
+qrcode[pil]>=7.4.0            # QR code generation for marketing
+
+# ============================================================================
+# Development & Testing
+# ============================================================================
+pytest>=7.4.0                 # Testing framework
+pytest-cov>=4.1.0             # Test coverage reporting
+black>=23.0.0                 # Code formatting
+flake8>=6.1.0                 # Linting
+mypy>=1.7.0                   # Type checking
+
+# ============================================================================
+# Data & Configuration
+# ============================================================================
+pyyaml>=6.0.0                 # YAML configuration files
+python-dotenv>=1.0.0          # Environment variable management
+jsonschema>=4.20.0            # JSON validation for puzzle files
+
+# ============================================================================
+# Utilities
+# ============================================================================
+tqdm>=4.66.0                  # Progress bars for batch generation
+click>=8.1.0                  # CLI interface for scripts
+colorama>=0.4.6               # Colored terminal output
+
+# ============================================================================
+# Optional: Market Research & Analytics
+# ============================================================================
+# pandas>=2.1.0               # Data analysis (uncomment if needed)
+# openpyxl>=3.1.0             # Excel file handling (uncomment if needed)
+# requests>=2.31.0            # HTTP requests for API calls (uncomment if needed)
+
+# ============================================================================
+# Documentation
+# ============================================================================
+# sphinx>=7.2.0               # Documentation generation (uncomment if needed)
+# sphinx-rtd-theme>=2.0.0     # ReadTheDocs theme (uncomment if needed)
+
