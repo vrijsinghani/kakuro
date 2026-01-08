@@ -163,11 +163,8 @@ def _draw_clue_cell(
     canvas.setFillColor(black)
     canvas.setFont(config.font_name, config.clue_font_size)
 
-    # Triangle size for direction indicators
-    tri_size = cell_size * 0.08
-
     # Horizontal clue ('across') - sum for run going RIGHT
-    # Position at 75% across, 75% up (upper-right triangle, above diagonal)
+    # Position at 75% across, 75% up (upper-right area, above diagonal)
     if h_clue is not None and h_clue > 0:
         text = str(h_clue)
         text_width = canvas.stringWidth(text, config.font_name, config.clue_font_size)
@@ -175,38 +172,14 @@ def _draw_clue_cell(
         text_y = y + cell_size * 0.75 - config.clue_font_size / 2
         canvas.drawString(text_x, text_y, text)
 
-        # Small triangle pointing RIGHT on the right edge of the bottom-right triangle
-        # Position near the right edge, vertically centered in bottom-right area
-        tri_x = x + cell_size - tri_size * 1.5
-        tri_y = y + cell_size * 0.25
-        canvas.setFillColor(black)
-        path = canvas.beginPath()
-        path.moveTo(tri_x, tri_y + tri_size)  # Top of triangle
-        path.lineTo(tri_x, tri_y - tri_size)  # Bottom of triangle
-        path.lineTo(tri_x + tri_size * 1.5, tri_y)  # Point to the right
-        path.close()
-        canvas.drawPath(path, fill=1, stroke=0)
-
     # Vertical clue ('down') - sum for run going DOWN
-    # Position at 25% across, 25% up (lower-left triangle, below diagonal)
+    # Position at 25% across, 25% up (lower-left area, below diagonal)
     if v_clue is not None and v_clue > 0:
         text = str(v_clue)
         text_width = canvas.stringWidth(text, config.font_name, config.clue_font_size)
         text_x = x + cell_size * 0.25 - text_width / 2
         text_y = y + cell_size * 0.25 - config.clue_font_size / 2
         canvas.drawString(text_x, text_y, text)
-
-        # Small triangle pointing DOWN on the bottom edge of the top-left triangle
-        # Position near the bottom edge, horizontally centered in top-left area
-        tri_x = x + cell_size * 0.25
-        tri_y = y + tri_size * 1.5
-        canvas.setFillColor(black)
-        path = canvas.beginPath()
-        path.moveTo(tri_x - tri_size, tri_y)  # Left of triangle
-        path.lineTo(tri_x + tri_size, tri_y)  # Right of triangle
-        path.lineTo(tri_x, tri_y - tri_size * 1.5)  # Point downward
-        path.close()
-        canvas.drawPath(path, fill=1, stroke=0)
 
 
 def _get_horizontal_clue(puzzle: Puzzle, row: int, col: int) -> Optional[int]:
