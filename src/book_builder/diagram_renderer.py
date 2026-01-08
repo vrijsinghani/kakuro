@@ -66,11 +66,7 @@ class DiagramFlowable(Flowable):
         # Title height (main diagram title)
         self.title_height = 30 + self.TITLE_BOTTOM_PADDING if self.diagram.title else 0
 
-        # Check if any grids have titles (like "✓ CORRECT")
-        self.has_grid_titles = any(grid.title for grid in self.diagram.grids)
-        self.grid_titles_height = self.GRID_TITLE_HEIGHT if self.has_grid_titles else 0
-
-        # Calculate grid dimensions
+        # Calculate grid dimensions (including per-grid title heights)
         self.grid_heights = []
         self.grid_widths = []
 
@@ -82,7 +78,11 @@ class DiagramFlowable(Flowable):
                 self.cell_size = self.cell_size * scale
 
             self.grid_widths.append(grid.cols * self.cell_size)
-            self.grid_heights.append(grid.rows * self.cell_size)
+            # Include title height (20pt) in each grid's height if it has a title
+            grid_height = grid.rows * self.cell_size
+            if grid.title:
+                grid_height += 20  # Space for grid title
+            self.grid_heights.append(grid_height)
 
         # Layout grids
         if self.diagram.layout == "horizontal" and len(self.diagram.grids) > 1:
@@ -137,9 +137,9 @@ class DiagramFlowable(Flowable):
             self.content_width = self.total_grid_width
             legend_contributes_height = self.legend_height
 
+        # Grid title heights are now included in grid_heights, so no separate addition
         self.height = (
             self.title_height
-            + self.grid_titles_height
             + max(
                 self.total_grid_height,
                 self.legend_height if self.legend_position == "right" else 0,
@@ -166,11 +166,8 @@ class DiagramFlowable(Flowable):
             self._draw_title(canvas, y_cursor)
             y_cursor -= self.TITLE_BOTTOM_PADDING
 
-        # Account for grid titles
-        if self.has_grid_titles:
-            y_cursor -= self.grid_titles_height
-
         # Draw grids (and legend to the right if positioned there)
+        # Note: grid titles are drawn within _draw_grid, which adjusts y internally
         grid_y = y_cursor
 
         if self.legend_position == "right" and self.diagram.legend:
@@ -241,13 +238,13 @@ class DiagramFlowable(Flowable):
         """Draw a single grid at the specified position."""
         canvas.saveState()
 
-        # Draw grid title if present
+        # Draw grid title if present (20pt reserved in height calculation)
         if grid.title:
             canvas.setFont("Helvetica-Bold", 11)
             title_width = canvas.stringWidth(grid.title, "Helvetica-Bold", 11)
             title_x = x + (grid.cols * self.cell_size - title_width) / 2
-            canvas.drawString(title_x, y + 5, grid.title)
-            y -= 15
+            canvas.drawString(title_x, y - 5, grid.title)
+            y -= 20
 
         # Draw cells
         for row in range(grid.rows):

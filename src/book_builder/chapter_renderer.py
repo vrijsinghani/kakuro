@@ -28,12 +28,14 @@ from .diagram_renderer import DiagramFlowable
 from .reference_table_renderer import ReferenceTableFlowable
 from .diagram_models import ReferenceTableDefinition
 from .diagrams.chapter1 import CHAPTER1_DIAGRAMS
+from .diagrams.chapter2 import CHAPTER2_DIAGRAMS
 
 logger = logging.getLogger(__name__)
 
 # Registry of all programmatic diagrams by chapter
 PROGRAMMATIC_DIAGRAMS = {
     "chapter1": CHAPTER1_DIAGRAMS,
+    "chapter2": CHAPTER2_DIAGRAMS,
 }
 
 
