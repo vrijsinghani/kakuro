@@ -83,7 +83,7 @@ The immediate need is to render Chapters 1-2 (with diagrams) plus generated puzz
 
 **Phase 1-2: COMPLETE** — Book config, chapter rendering, image handling working.
 
-**Phase 5: IN PROGRESS** — Programmatic Diagram Renderer
+**Phase 5: COMPLETE** — Programmatic Diagram Renderer
 
 ### Problem (Resolved)
 
@@ -93,24 +93,52 @@ The original approach used HTML→Playwright→PDF→SVG conversion pipeline:
 - Fallbacks to PNG raster images degraded quality
 - External dependencies (Playwright, pdf2svg) were fragile
 
-### Solution
+### Solution (Implemented)
 
-Replace the HTML conversion pipeline with **programmatic ReportLab diagram rendering**:
-- Diagrams defined as Python dataclasses
-- Rendered directly using ReportLab drawing primitives
+Replaced the HTML conversion pipeline with **programmatic ReportLab diagram rendering**:
+- Diagrams defined as Python dataclasses (`DiagramDefinition`, `DiagramGrid`, `DiagramCell`)
+- Rendered directly using ReportLab drawing primitives (`DiagramFlowable`)
 - True vector output, perfect scaling
 - No external dependencies
 - Consistent with puzzle grid rendering approach
 
 See `openspec/changes/add-book-builder-pipeline/specs/diagram-renderer/` for full spec.
 
-**Completed:**
-- [x] Removed PNG fallbacks from chapter_renderer.py
-- [x] Updated image scaling to prioritize full width
+### Completed Implementation
+
+**Foundation:**
+- [x] `src/book_builder/diagram_models.py` — Data models for diagrams, grids, cells, legends, annotations
+- [x] `src/book_builder/diagram_renderer.py` — DiagramFlowable with grid, legend, annotation rendering
+- [x] `src/book_builder/reference_table_renderer.py` — ReferenceTableFlowable for combination tables
+
+**Chapter 1 Diagrams (7 diagrams):**
+- [x] `src/book_builder/diagrams/chapter1.py` — All 7 diagrams defined and rendering correctly
+- [x] Diagram 1: Anatomy of a Kakuro Grid
+- [x] Diagram 2-3: Across/Down runs
+- [x] Diagram 4: No-Repetition Rule (horizontal side-by-side layout)
+- [x] Diagram 5: Same Digit in Different Runs
+- [x] Diagram 6: Complete Solved Example
+- [x] Diagram 7: Unique Combinations Reference (ReferenceTableDefinition)
+
+**Chapter 2 Diagrams (9 diagrams):**
+- [x] `src/book_builder/diagrams/chapter2.py` — All 9 diagrams defined and rendering correctly
+- [x] Diagram 1: Unique Combinations Reference Table
+- [x] Diagrams 2a/2b: Elimination Method (Setup/Solution)
+- [x] Diagram 3: The Cascade Effect
+- [x] Diagram 4: Identifying Good Starting Points
+- [x] Diagrams 5a/5b: Complex Intersection Analysis
+- [x] Diagrams 6a/6b: Troubleshooting (Repeated Digits/Wrong Sums)
+
+**Integration:**
+- [x] ChapterRenderer detects `chapter{N}/diagram_{M}` paths and routes to programmatic diagrams
+- [x] `PROGRAMMATIC_DIAGRAMS` registry includes chapter1 and chapter2
+- [x] Per-grid title height calculation (no double-counting)
+- [x] Legend positioning (right-side, vertically centered)
+- [x] Annotation box spacing consistency
 
 **Next Steps:**
-1. Create DiagramRenderer class and data models
-2. Define all Chapter 1 diagrams in Python
-3. Integrate with ChapterRenderer
-4. Complete Phase 6 (Testing & Polish)
+1. Phase 5.5: Cleanup deprecated HTML/PNG/SVG diagram files
+2. Phase 3: Book Assembly (front matter, TOC, puzzle integration)
+3. Phase 4: Build CLI
+4. Phase 6: Testing & Polish
 

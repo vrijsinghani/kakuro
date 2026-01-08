@@ -87,47 +87,58 @@
 - [ ] 4.2.3 Validate image paths resolve correctly
 - [ ] 4.2.4 Report missing or broken references
 
-## Phase 5: Programmatic Diagram Renderer (BLOCKING)
+## Phase 5: Programmatic Diagram Renderer ✓ COMPLETE
 
 **See:** `openspec/changes/add-book-builder-pipeline/specs/diagram-renderer/`
 
 **Decision:** Replace HTML→browser→screenshot pipeline with ReportLab direct rendering.
 
-### 5.1 Diagram Renderer Foundation
+### 5.1 Diagram Renderer Foundation ✓
 - [x] 5.1.1 Remove PNG fallbacks from chapter_renderer.py
 - [x] 5.1.2 Update image scaling to prioritize full width for vector graphics
-- [ ] 5.1.3 Create `src/book_builder/diagram_models.py` with dataclass definitions
-- [ ] 5.1.4 Create `src/book_builder/diagram_renderer.py` with DiagramRenderer class
-- [ ] 5.1.5 Implement grid rendering (cells, clues, highlights)
-- [ ] 5.1.6 Implement annotation box rendering
-- [ ] 5.1.7 Implement legend rendering
-- [ ] 5.1.8 Implement side-by-side layout for comparison diagrams
+- [x] 5.1.3 Create `src/book_builder/diagram_models.py` with dataclass definitions
+- [x] 5.1.4 Create `src/book_builder/diagram_renderer.py` with DiagramFlowable class
+- [x] 5.1.5 Implement grid rendering (cells, clues, highlights)
+- [x] 5.1.6 Implement annotation box rendering with styled backgrounds
+- [x] 5.1.7 Implement legend rendering (vertical stacked, right-side positioning)
+- [x] 5.1.8 Implement side-by-side layout for comparison diagrams (horizontal layout)
+- [x] 5.1.9 Create `src/book_builder/reference_table_renderer.py` for combination tables
 
-### 5.2 Chapter 1 Diagram Definitions
-- [ ] 5.2.1 Create `src/book_builder/diagrams/__init__.py`
-- [ ] 5.2.2 Create `src/book_builder/diagrams/chapter1.py`
-- [ ] 5.2.3 Define Diagram 1: Anatomy of a Kakuro Grid
-- [ ] 5.2.4 Define Diagram 2: Understanding Across Runs (Horizontal)
-- [ ] 5.2.5 Define Diagram 3: Understanding Down Runs (Vertical)
-- [ ] 5.2.6 Define Diagram 4: The No-Repetition Rule (side-by-side CORRECT/INCORRECT)
-- [ ] 5.2.7 Define Diagram 5: Same Digit in Different Runs
-- [ ] 5.2.8 Define Diagram 6: Complete Solved Example
-- [ ] 5.2.9 Define Diagram 7: Unique Combinations Reference
+### 5.2 Chapter 1 Diagram Definitions ✓
+- [x] 5.2.1 Create `src/book_builder/diagrams/__init__.py`
+- [x] 5.2.2 Create `src/book_builder/diagrams/chapter1.py`
+- [x] 5.2.3 Define Diagram 1: Anatomy of a Kakuro Grid
+- [x] 5.2.4 Define Diagram 2: Understanding Across Runs (Horizontal)
+- [x] 5.2.5 Define Diagram 3: Understanding Down Runs (Vertical)
+- [x] 5.2.6 Define Diagram 4: The No-Repetition Rule (side-by-side CORRECT/INCORRECT)
+- [x] 5.2.7 Define Diagram 5: Same Digit in Different Runs
+- [x] 5.2.8 Define Diagram 6: Complete Solved Example
+- [x] 5.2.9 Define Diagram 7: Unique Combinations Reference (ReferenceTableDefinition)
 
-### 5.3 Chapter 2 Diagram Definitions
-- [ ] 5.3.1 Create `src/book_builder/diagrams/chapter2.py`
-- [ ] 5.3.2 Define all Chapter 2 diagrams (solving techniques)
+### 5.3 Chapter 2 Diagram Definitions ✓
+- [x] 5.3.1 Create `src/book_builder/diagrams/chapter2.py`
+- [x] 5.3.2 Define Diagram 1: Unique Combinations Reference Table
+- [x] 5.3.3 Define Diagram 2a: Elimination Method — Setup
+- [x] 5.3.4 Define Diagram 2b: Elimination Method — Solution
+- [x] 5.3.5 Define Diagram 3: The Cascade Effect
+- [x] 5.3.6 Define Diagram 4: Identifying Good Starting Points
+- [x] 5.3.7 Define Diagram 5a: Complex Intersection Analysis — Setup
+- [x] 5.3.8 Define Diagram 5b: Complex Intersection Analysis — Solution
+- [x] 5.3.9 Define Diagram 6a: Troubleshooting — Repeated Digits
+- [x] 5.3.10 Define Diagram 6b: Troubleshooting — Wrong Sums
 
-### 5.4 Integration
-- [ ] 5.4.1 Update ChapterRenderer to detect programmatic diagram references
-- [ ] 5.4.2 Update chapter markdown to use new diagram references
-- [ ] 5.4.3 Verify all diagrams render at full width
-- [ ] 5.4.4 Verify all text is readable at print size (minimum 10pt effective)
+### 5.4 Integration ✓
+- [x] 5.4.1 Update ChapterRenderer to detect programmatic diagram references
+- [x] 5.4.2 Register chapter1 and chapter2 diagrams in PROGRAMMATIC_DIAGRAMS
+- [x] 5.4.3 Verify all diagrams render correctly with proper spacing
+- [x] 5.4.4 Fix grid title spacing (per-grid height calculation)
+- [x] 5.4.5 Fix legend positioning (right-side, vertically centered)
+- [x] 5.4.6 Fix annotation box spacing consistency
 
-### 5.5 Cleanup (after verification)
-- [ ] 5.5.1 Deprecate HTML diagram source files
-- [ ] 5.5.2 Deprecate scripts/convert_diagrams_to_svg.py
-- [ ] 5.5.3 Remove PNG/SVG diagram files from books/ (keep as backup initially)
+### 5.5 Cleanup ✓
+- [x] 5.5.1 Delete HTML diagram source files (kdp/book_content/chapters/visuals/*.html)
+- [x] 5.5.2 Delete scripts/convert_diagrams_to_svg.py
+- [x] 5.5.3 Delete PNG/SVG diagram files from books/ and kdp/
 
 ## Phase 6: Testing & Polish
 

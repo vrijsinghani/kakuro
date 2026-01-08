@@ -387,6 +387,3 @@ You're already on your way.
 Let's continue to Chapter 2.
 
 ---
-
-*[End of Chapter 1]*
-
