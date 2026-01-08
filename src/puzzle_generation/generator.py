@@ -106,25 +106,25 @@ def _generate_kakuro(
     """
     Generate a single Kakuro puzzle.
 
-    This follows an improved algorithm:
+    Algorithm:
     1. Create grid with edges as black cells
     2. Randomly place black cells based on density
     3. Strategically add black cells to limit run lengths
     4. Clean up isolated cells
-    5. Compute runs
-    6. Solve the puzzle
+    5. Validate quality (no excessive consecutive black rows/columns)
+    6. Compute runs and solve
 
     Args:
         height: Grid height
         width: Grid width
         black_density: Proportion of black cells
-        max_run_length: Maximum allowed run length (prevents exponentially hard puzzles)
+        max_run_length: Maximum allowed run length
 
     Returns:
         Tuple of (grid, horizontal_runs, vertical_runs)
 
     Raises:
-        Exception: If puzzle generation fails
+        Exception: If puzzle generation fails or quality check fails
     """
     # Initialize grid
     cells = [[0] * width for _ in range(height)]
@@ -149,13 +149,15 @@ def _generate_kakuro(
     # Clean up isolated cells (iterative process)
     _cleanup_grid(grid)
 
+    # Remove any all-black rows or columns (compresses the grid)
+    grid = _remove_all_black_lines(grid)
+
     # Compute runs
     h_runs, v_runs = compute_runs(grid)
 
     logger.debug(f"Found {len(h_runs)} horizontal and {len(v_runs)} vertical runs")
 
     # Solve the puzzle to validate and compute clues
-    # Use CSP solver with backtrack limit - if exceeded, grid layout is too hard
     if not solve_kakuro(
         grid, h_runs, v_runs, randomize=True, use_csp=True, max_backtracks=500000
     ):
@@ -164,6 +166,56 @@ def _generate_kakuro(
         )
 
     return grid, h_runs, v_runs
+
+
+def _remove_all_black_lines(grid: Grid) -> Grid:
+    """
+    Remove any interior rows or columns that are completely black.
+
+    This compresses the grid but produces cleaner looking puzzles.
+    The first row and first column (edges) are always kept.
+
+    Args:
+        grid: The grid to clean up
+
+    Returns:
+        A new Grid with all-black lines removed
+    """
+    # Find rows to keep (row 0 always kept, plus any row with at least one white cell)
+    rows_to_keep = [0]  # Always keep edge
+    for row in range(1, grid.height):
+        has_white = any(not grid.is_black(row, col) for col in range(1, grid.width))
+        if has_white:
+            rows_to_keep.append(row)
+
+    # Find columns to keep (col 0 always kept, plus any col with at least
+    # one white cell)
+    cols_to_keep = [0]  # Always keep edge
+    for col in range(1, grid.width):
+        has_white = any(not grid.is_black(row, col) for row in range(1, grid.height))
+        if has_white:
+            cols_to_keep.append(col)
+
+    # If nothing was removed, return original grid
+    if len(rows_to_keep) == grid.height and len(cols_to_keep) == grid.width:
+        return grid
+
+    # Build new compressed grid
+    new_height = len(rows_to_keep)
+    new_width = len(cols_to_keep)
+
+    new_cells = []
+    for new_row, old_row in enumerate(rows_to_keep):
+        row_cells = []
+        for new_col, old_col in enumerate(cols_to_keep):
+            row_cells.append(grid.get_cell(old_row, old_col))
+        new_cells.append(row_cells)
+
+    logger.debug(
+        f"Compressed grid from {grid.height}x{grid.width} to {new_height}x{new_width}"
+    )
+
+    return Grid(height=new_height, width=new_width, cells=new_cells)
 
 
 def _limit_run_lengths(grid: Grid, max_run_length: int) -> None:
