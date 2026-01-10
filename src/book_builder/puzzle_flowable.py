@@ -11,6 +11,7 @@ from reportlab.lib.colors import HexColor
 from src.puzzle_generation import Puzzle
 from src.pdf_generation.renderer import render_grid
 from src.pdf_generation.models import RenderConfig
+from src.book_builder.config import DEFAULT_FONTS
 
 # The four basic Kakuro rules
 KAKURO_RULES = [
@@ -128,7 +129,7 @@ class PuzzleFlowable(Flowable):
             thick_line_width=2.0 * scale,
             clue_font_size=max(7.0, 11.0 * scale),
             solution_font_size=max(10.0, 16.0 * scale),
-            font_name="Helvetica",
+            font_name=DEFAULT_FONTS["body"],
             show_solution=self.show_solution,
         )
 
@@ -146,8 +147,8 @@ class PuzzleFlowable(Flowable):
             f"{grid.width}×{grid.height}"
         )
 
-        canvas.setFont("Helvetica-Bold", 16)
-        text_width = canvas.stringWidth(header, "Helvetica-Bold", 16)
+        canvas.setFont(DEFAULT_FONTS["heading"], 16)
+        text_width = canvas.stringWidth(header, DEFAULT_FONTS["heading"], 16)
         x = (self.width - text_width) / 2
         canvas.drawString(x, y + 8, header)
 
@@ -163,7 +164,7 @@ class PuzzleFlowable(Flowable):
         left_margin = 40
         bullet = "•"
 
-        canvas.setFont("Helvetica", rule_font_size)
+        canvas.setFont(DEFAULT_FONTS["body"], rule_font_size)
         canvas.setFillColor(HexColor("#333333"))
 
         y_pos = y + self.rules_height - 12
@@ -242,13 +243,13 @@ class SolutionFlowable(Flowable):
             thick_line_width=max(0.5, 1.0 * scale),
             clue_font_size=max(4.0, 6.0 * scale),
             solution_font_size=max(5.0, 8.0 * scale),
-            font_name="Helvetica",
+            font_name=DEFAULT_FONTS["body"],
             show_solution=True,
         )
 
         # Draw puzzle number
         canvas.saveState()
-        canvas.setFont("Helvetica-Bold", 9)
+        canvas.setFont(DEFAULT_FONTS["heading"], 9)
         canvas.drawString(0, self.height - 12, f"#{self.puzzle_number}")
         canvas.restoreState()
 

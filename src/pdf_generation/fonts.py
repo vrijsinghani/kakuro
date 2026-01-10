@@ -14,6 +14,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 
 logger = logging.getLogger(__name__)
 
+# Import DEFAULT_FONTS for consistent font configuration
+from src.book_builder.config import DEFAULT_FONTS
+
 # Default font assets directory
 FONTS_DIR = Path(__file__).parent.parent.parent / "assets" / "fonts"
 
@@ -68,19 +71,43 @@ def register_fonts(fonts_dir: Optional[Path] = None) -> list[str]:
         except Exception as e:
             logger.warning(f"Failed to register font {font_file}: {e}")
 
+    # Register NotoSans as a font family if both regular and bold are present
+    if "NotoSans-Regular" in _registered_fonts and "NotoSans-Bold" in _registered_fonts:
+        try:
+            from reportlab.pdfbase.pdfmetrics import registerFontFamily
+
+            registerFontFamily(
+                "NotoSans",
+                normal="NotoSans-Regular",
+                bold="NotoSans-Bold",
+                italic="NotoSans-Regular",  # No italic variant, use Regular
+                boldItalic="NotoSans-Bold",  # No boldItalic variant, use Bold
+            )
+            logger.debug("Registered NotoSans font family")
+        except Exception as e:
+            logger.warning(f"Failed to register NotoSans font family: {e}")
+
     return registered
 
 
-def get_font_name(preferred: str = "Helvetica", fallback: str = "Helvetica") -> str:
-    """Get an available font name, with fallback.
+def get_font_name(preferred: str = None, fallback: str = None) -> str:
+    """Get an available font name.
 
     Args:
-        preferred: Preferred font name to use.
+        preferred: Preferred font name to use. Defaults to DEFAULT_FONTS["body"].
         fallback: Fallback font name if preferred is unavailable.
+                  Defaults to DEFAULT_FONTS["body"].
 
     Returns:
         Name of an available font.
+
+    Raises:
+        ValueError: If neither preferred nor fallback font is available.
     """
+    if preferred is None:
+        preferred = DEFAULT_FONTS["body"]
+    if fallback is None:
+        fallback = DEFAULT_FONTS["body"]
     # Check if preferred font is built-in
     if preferred in BUILTIN_FONTS:
         return preferred
@@ -100,8 +127,12 @@ def get_font_name(preferred: str = "Helvetica", fallback: str = "Helvetica") -> 
         return fallback
 
     # Ultimate fallback to Helvetica
-    logger.warning(f"Neither '{preferred}' nor '{fallback}' available, using Helvetica")
-    return "Helvetica"
+    # Raise error if no font available - NO IMPLICIT FALLBACKS
+    raise ValueError(
+        f"Font error: Neither preferred font '{preferred}' nor fallback '{fallback}' "
+        f"could be found. Registered fonts: {sorted(list(_registered_fonts))}. "
+        f"Built-in fonts: {sorted(list(BUILTIN_FONTS))}."
+    )
 
 
 def is_font_available(font_name: str) -> bool:

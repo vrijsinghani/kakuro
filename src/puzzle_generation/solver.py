@@ -170,6 +170,12 @@ def solve_kakuro(
 
     logger.debug(f"Solving puzzle with {len(empty_cells)} empty cells")
 
+    # Sanity check: Run lengths > 9 are impossible (digits 1-9 must be unique)
+    for run in horizontal_runs + vertical_runs:
+        if run.length > 9:
+            logger.warning(f"Found impossible run length {run.length} at {run}")
+            return False
+
     # Initialize backtrack counter
     backtrack_counter = {"count": 0, "max": max_backtracks}
 

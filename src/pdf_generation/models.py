@@ -83,7 +83,7 @@ class RenderConfig:
     thick_line_width: float = 2.0
     clue_font_size: float = 8.0
     solution_font_size: float = 14.0
-    font_name: str = "Helvetica"
+    font_name: str = "NotoSans-Regular"
     show_solution: bool = False
 
     @classmethod

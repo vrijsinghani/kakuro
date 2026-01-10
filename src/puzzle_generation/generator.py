@@ -35,6 +35,8 @@ def generate_puzzle(
     seed: Optional[int] = None,
     max_attempts: int = 10,
     max_run_length: int = 7,
+    min_size: Optional[Tuple[int, int]] = None,
+    compress_grid: bool = True,
 ) -> Puzzle:
     """
     Generate a valid Kakuro puzzle.
@@ -46,6 +48,10 @@ def generate_puzzle(
         seed: Random seed for reproducibility
         max_attempts: Maximum generation attempts before giving up
         max_run_length: Maximum allowed run length (default 7, prevents hard puzzles)
+        min_size: Optional minimum (height, width) after compression. If specified,
+            puzzles that shrink below this size will be rejected and regenerated.
+        compress_grid: If True, removes all-black rows/columns for cleaner puzzles.
+            If False, preserves the exact requested dimensions.
 
     Returns:
         A valid Puzzle object with unique solution
@@ -68,6 +74,10 @@ def generate_puzzle(
             f"Black density must be between 0.1 and 0.4, got {black_density}"
         )
 
+    # Default min_size to requested size (strict enforcement)
+    if min_size is None:
+        min_size = (height, width)
+
     # Set random seed if provided
     if seed is not None:
         random.seed(seed)
@@ -79,13 +89,21 @@ def generate_puzzle(
 
         try:
             grid, h_runs, v_runs = _generate_kakuro(
-                height, width, black_density, max_run_length
+                height, width, black_density, max_run_length, compress_grid
             )
+
+            # Enforce minimum size constraint
+            if grid.height < min_size[0] or grid.width < min_size[1]:
+                logger.debug(
+                    f"Rejecting puzzle: {grid.height}x{grid.width} < "
+                    f"{min_size[0]}x{min_size[1]}"
+                )
+                continue
 
             puzzle = Puzzle(grid=grid, horizontal_runs=h_runs, vertical_runs=v_runs)
 
             logger.info(
-                f"Successfully generated {height}x{width} puzzle with "
+                f"Successfully generated {grid.height}x{grid.width} puzzle with "
                 f"{len(h_runs)} horizontal and {len(v_runs)} vertical runs"
             )
 
@@ -96,12 +114,17 @@ def generate_puzzle(
             continue
 
     raise PuzzleGenerationError(
-        f"Failed to generate puzzle after {max_attempts} attempts"
+        f"Failed to generate {min_size[0]}x{min_size[1]}+ puzzle after "
+        f"{max_attempts} attempts"
     )
 
 
 def _generate_kakuro(
-    height: int, width: int, black_density: float, max_run_length: int = 7
+    height: int,
+    width: int,
+    black_density: float,
+    max_run_length: int = 7,
+    compress_grid: bool = True,
 ) -> Tuple[Grid, list, list]:
     """
     Generate a single Kakuro puzzle.
@@ -111,7 +134,7 @@ def _generate_kakuro(
     2. Randomly place black cells based on density
     3. Strategically add black cells to limit run lengths
     4. Clean up isolated cells
-    5. Validate quality (no excessive consecutive black rows/columns)
+    5. Optionally compress grid (remove all-black lines)
     6. Compute runs and solve
 
     Args:
@@ -119,6 +142,7 @@ def _generate_kakuro(
         width: Grid width
         black_density: Proportion of black cells
         max_run_length: Maximum allowed run length
+        compress_grid: If True, removes all-black rows/columns
 
     Returns:
         Tuple of (grid, horizontal_runs, vertical_runs)
@@ -149,8 +173,12 @@ def _generate_kakuro(
     # Clean up isolated cells (iterative process)
     _cleanup_grid(grid)
 
-    # Remove any all-black rows or columns (compresses the grid)
-    grid = _remove_all_black_lines(grid)
+    # Optionally remove any all-black rows or columns (compresses the grid)
+    if compress_grid:
+        grid = _remove_all_black_lines(grid)
+
+        # Re-check run lengths as compression may have merged runs
+        _limit_run_lengths(grid, max_run_length)
 
     # Compute runs
     h_runs, v_runs = compute_runs(grid)

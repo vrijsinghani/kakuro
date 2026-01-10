@@ -18,17 +18,21 @@ from reportlab.platypus import (
     KeepTogether,
     HRFlowable,
     Flowable,
+    PageBreak,
 )
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 
 from .config import BookConfig
+
 from .diagram_renderer import DiagramFlowable
 from .reference_table_renderer import ReferenceTableFlowable
+from .progress_tracker_renderer import ProgressTrackerFlowable
 from .diagram_models import ReferenceTableDefinition
 from .diagrams.chapter1 import CHAPTER1_DIAGRAMS
 from .diagrams.chapter2 import CHAPTER2_DIAGRAMS
+from .diagrams.chapter3 import CHAPTER3_DIAGRAMS
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +40,7 @@ logger = logging.getLogger(__name__)
 PROGRAMMATIC_DIAGRAMS = {
     "chapter1": CHAPTER1_DIAGRAMS,
     "chapter2": CHAPTER2_DIAGRAMS,
+    "chapter3": CHAPTER3_DIAGRAMS,
 }
 
 
@@ -130,6 +135,9 @@ class ChapterRenderer:
         self.italic_pattern = re.compile(r"\*([^*]+)\*")
         self.bullet_pattern = re.compile(r"^[-*]\s+(.+)$")
         self.hr_pattern = re.compile(r"^---+\s*$")
+        self.pagebreak_pattern = re.compile(
+            r"^<!--\s*pagebreak\s*-->\s*$", re.IGNORECASE
+        )
 
     def render_chapter(self, chapter_path: Path, chapter_title: str) -> list:
         """Render a markdown chapter to flowables.
@@ -173,6 +181,15 @@ class ChapterRenderer:
                     HRFlowable(width="60%", thickness=1, color=HexColor("#CCCCCC"))
                 )
                 flowables.append(Spacer(1, 12))
+                i += 1
+                continue
+
+            # Page break marker
+            if self.pagebreak_pattern.match(line):
+                if current_list_items:
+                    flowables.append(self._create_list(current_list_items))
+                    current_list_items = []
+                flowables.append(PageBreak())
                 i += 1
                 continue
 
@@ -324,6 +341,18 @@ class ChapterRenderer:
         Returns:
             List of flowables if programmatic diagram found, None otherwise.
         """
+        # Special case for Progress Tracker
+        if image_path == "programmatic:tracker":
+            logger.info("Using Progress Tracker diagram")
+            # Calculate max width
+            max_width = (
+                self.config.page_width_points
+                - (self.config.layout.margins.left + self.config.layout.margins.right)
+                * 72
+            )
+            flowable = ProgressTrackerFlowable(width=max_width)
+            return [Spacer(1, 16), flowable, Spacer(1, 8)]
+
         # Parse path like "visuals/diagrams/chapter1/diagram_1.png"
         import re
 

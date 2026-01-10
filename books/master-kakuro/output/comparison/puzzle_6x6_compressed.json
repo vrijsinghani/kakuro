@@ -1,0 +1,126 @@
+{
+  "grid": {
+    "height": 6,
+    "width": 6,
+    "cells": [
+      [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      [
+        -1,
+        -1,
+        -1,
+        7,
+        2,
+        5
+      ],
+      [
+        -1,
+        -1,
+        -1,
+        1,
+        7,
+        4
+      ],
+      [
+        -1,
+        8,
+        7,
+        5,
+        3,
+        2
+      ],
+      [
+        -1,
+        9,
+        2,
+        8,
+        5,
+        1
+      ],
+      [
+        -1,
+        7,
+        8,
+        -1,
+        9,
+        6
+      ]
+    ]
+  },
+  "horizontal_runs": [
+    {
+      "row": 1,
+      "col": 3,
+      "length": 3,
+      "total": 14
+    },
+    {
+      "row": 2,
+      "col": 3,
+      "length": 3,
+      "total": 12
+    },
+    {
+      "row": 3,
+      "col": 1,
+      "length": 5,
+      "total": 25
+    },
+    {
+      "row": 4,
+      "col": 1,
+      "length": 5,
+      "total": 25
+    },
+    {
+      "row": 5,
+      "col": 1,
+      "length": 2,
+      "total": 15
+    },
+    {
+      "row": 5,
+      "col": 4,
+      "length": 2,
+      "total": 15
+    }
+  ],
+  "vertical_runs": [
+    {
+      "row": 3,
+      "col": 1,
+      "length": 3,
+      "total": 24
+    },
+    {
+      "row": 3,
+      "col": 2,
+      "length": 3,
+      "total": 17
+    },
+    {
+      "row": 1,
+      "col": 3,
+      "length": 4,
+      "total": 21
+    },
+    {
+      "row": 1,
+      "col": 4,
+      "length": 5,
+      "total": 26
+    },
+    {
+      "row": 1,
+      "col": 5,
+      "length": 5,
+      "total": 18
+    }
+  ]
+}

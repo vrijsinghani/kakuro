@@ -6,10 +6,12 @@ eliminating the need for HTML→browser→screenshot conversion.
 """
 
 import logging
-from reportlab.platypus import Flowable
+from reportlab.platypus import Flowable, Paragraph
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.colors import black, white, HexColor, Color
 from reportlab.lib.units import inch
 
+from .config import DEFAULT_FONTS
 from .diagram_models import (
     DiagramDefinition,
     DiagramGrid,
@@ -29,7 +31,7 @@ class DiagramFlowable(Flowable):
 
     # Default styling
     DEFAULT_CELL_SIZE = 36  # points
-    DEFAULT_FONT = "Helvetica"
+    DEFAULT_FONT = DEFAULT_FONTS["body"]
     DEFAULT_LINE_WIDTH = 1.0
     DEFAULT_THICK_LINE_WIDTH = 2.0
     NAVY_BLUE = HexColor("#1a365d")  # Navy blue for black cells
@@ -57,6 +59,9 @@ class DiagramFlowable(Flowable):
         self.diagram = diagram
         self.max_width = max_width
         self.cell_size = cell_size or self.DEFAULT_CELL_SIZE
+
+        # Store calculated annotation heights
+        self.annotation_heights = []
 
         # Calculate dimensions
         self._calculate_dimensions()
@@ -105,7 +110,34 @@ class DiagramFlowable(Flowable):
             self.total_grid_height = sum(self.grid_heights) if self.grid_heights else 0
 
         # Annotations height
-        self.annotations_height = len(self.diagram.annotations) * 50
+        self.annotation_heights = []
+        available_width = (
+            self.max_width - 60
+        )  # Width minus padding (20 left + 20 right + 10 inner margins)
+
+        total_anno_height = 0
+        for anno in self.diagram.annotations:
+            # Calculate height needed for title
+            title_height = 15 if anno.title else 0
+
+            # Calculate height needed for wrapped text
+            style = ParagraphStyle(
+                "AnnotationText",
+                fontName=DEFAULT_FONTS["body"],
+                fontSize=9,
+                leading=11,
+            )
+            p = Paragraph(anno.text, style)
+            w, h = p.wrap(
+                available_width, 1000
+            )  # Wrap with practically infinite height
+
+            # Box height = text height + title height + padding (15 top + 15 bottom)
+            box_height = h + title_height + 30
+            self.annotation_heights.append(box_height)
+            total_anno_height += box_height + 10  # +10 for spacing between boxes
+
+        self.annotations_height = total_anno_height
 
         # Legend dimensions
         self.legend_position = getattr(self.diagram, "legend_position", "right")
@@ -201,9 +233,10 @@ class DiagramFlowable(Flowable):
             y_cursor -= self.legend_height
 
         # Draw annotations
-        for annotation in self.diagram.annotations:
-            self._draw_annotation_box(canvas, annotation, y_cursor)
-            y_cursor -= 50
+        for i, annotation in enumerate(self.diagram.annotations):
+            box_height = self.annotation_heights[i]
+            self._draw_annotation_box(canvas, annotation, y_cursor, box_height)
+            y_cursor -= box_height + 10
 
         # Draw caption
         if self.diagram.caption:
@@ -240,8 +273,8 @@ class DiagramFlowable(Flowable):
 
         # Draw grid title if present (20pt reserved in height calculation)
         if grid.title:
-            canvas.setFont("Helvetica-Bold", 11)
-            title_width = canvas.stringWidth(grid.title, "Helvetica-Bold", 11)
+            canvas.setFont(DEFAULT_FONTS["heading"], 11)
+            title_width = canvas.stringWidth(grid.title, DEFAULT_FONTS["heading"], 11)
             title_x = x + (grid.cols * self.cell_size - title_width) / 2
             canvas.drawString(title_x, y - 5, grid.title)
             y -= 20
@@ -268,8 +301,10 @@ class DiagramFlowable(Flowable):
 
         # Draw grid caption if present
         if grid.caption:
-            canvas.setFont("Helvetica-Oblique", 10)
-            caption_width = canvas.stringWidth(grid.caption, "Helvetica-Oblique", 10)
+            canvas.setFont(DEFAULT_FONTS["caption"], 10)
+            caption_width = canvas.stringWidth(
+                grid.caption, DEFAULT_FONTS["caption"], 10
+            )
             caption_x = x + (grid_width - caption_width) / 2
             canvas.drawString(caption_x, y - grid_height - 15, grid.caption)
 
@@ -364,10 +399,12 @@ class DiagramFlowable(Flowable):
             return
 
         canvas.saveState()
-        canvas.setFont("Helvetica-Bold", 14)
+        canvas.setFont(DEFAULT_FONTS["heading"], 14)
         canvas.setFillColor(black)
 
-        text_width = canvas.stringWidth(self.diagram.title, "Helvetica-Bold", 14)
+        text_width = canvas.stringWidth(
+            self.diagram.title, DEFAULT_FONTS["heading"], 14
+        )
         x = (self.width - text_width) / 2
         canvas.drawString(x, y + 8, self.diagram.title)
         canvas.restoreState()
@@ -384,12 +421,12 @@ class DiagramFlowable(Flowable):
 
         # Legend title
         if self.diagram.legend.title:
-            canvas.setFont("Helvetica-Bold", 10)
+            canvas.setFont(DEFAULT_FONTS["heading"], 10)
             canvas.drawString(x, y_cursor, self.diagram.legend.title)
             y_cursor -= line_height
 
         # Legend items - stacked vertically
-        canvas.setFont("Helvetica", 9)
+        canvas.setFont(DEFAULT_FONTS["body"], 9)
         for color_key, label in self.diagram.legend.items.items():
             # Draw color swatch
             try:
@@ -420,12 +457,12 @@ class DiagramFlowable(Flowable):
 
         # Legend title
         if self.diagram.legend.title:
-            canvas.setFont("Helvetica-Bold", 10)
+            canvas.setFont(DEFAULT_FONTS["heading"], 10)
             canvas.drawString(x, y_cursor, self.diagram.legend.title)
             y_cursor -= line_height
 
         # Legend items
-        canvas.setFont("Helvetica", 9)
+        canvas.setFont(DEFAULT_FONTS["body"], 9)
         for color_key, label in self.diagram.legend.items.items():
             try:
                 color = HexColor(color_key)
@@ -443,33 +480,43 @@ class DiagramFlowable(Flowable):
 
         canvas.restoreState()
 
-    def _draw_annotation_box(self, canvas, annotation: AnnotationBox, y):
+    def _draw_annotation_box(self, canvas, annotation: AnnotationBox, y, height):
         """Draw an annotation box with styled background."""
         canvas.saveState()
 
         style = ANNOTATION_STYLES.get(annotation.style, ANNOTATION_STYLES["info"])
         box_width = self.width - 40
-        box_height = 40
         x = 20
 
         # Draw background
         canvas.setFillColor(HexColor(style["bg"]))
         canvas.setStrokeColor(HexColor(style["border"]))
         canvas.setLineWidth(1.5)
-        canvas.roundRect(x, y - box_height, box_width, box_height, 5, stroke=1, fill=1)
+        canvas.roundRect(x, y - height, box_width, height, 5, stroke=1, fill=1)
+
+        # Content area constraints
+        text_x = x + 10
+        text_width = box_width - 20
+        cursor_y = y - 15
 
         # Draw title if present
-        text_y = y - 15
         if annotation.title:
-            canvas.setFont("Helvetica-Bold", 10)
+            canvas.setFont(DEFAULT_FONTS["heading"], 10)
             canvas.setFillColor(HexColor(style["text"]))
-            canvas.drawString(x + 10, text_y, annotation.title)
-            text_y -= 15
+            canvas.drawString(text_x, cursor_y, annotation.title)
+            cursor_y -= 15
 
-        # Draw text
-        canvas.setFont("Helvetica", 9)
-        canvas.setFillColor(HexColor(style["text"]))
-        canvas.drawString(x + 10, text_y, annotation.text)
+        # Draw wrapped text using Paragraph
+        para_style = ParagraphStyle(
+            "AnnotationText",
+            fontName=DEFAULT_FONTS["body"],
+            fontSize=9,
+            leading=11,
+            textColor=HexColor(style["text"]),
+        )
+        p = Paragraph(annotation.text, para_style)
+        p.wrapOn(canvas, text_width, height)
+        p.drawOn(canvas, text_x, cursor_y - p.height)
 
         canvas.restoreState()
 
@@ -479,10 +526,12 @@ class DiagramFlowable(Flowable):
             return
 
         canvas.saveState()
-        canvas.setFont("Helvetica-Oblique", 10)
+        canvas.setFont(DEFAULT_FONTS["caption"], 10)
         canvas.setFillColor(black)
 
-        text_width = canvas.stringWidth(self.diagram.caption, "Helvetica-Oblique", 10)
+        text_width = canvas.stringWidth(
+            self.diagram.caption, DEFAULT_FONTS["caption"], 10
+        )
         x = (self.width - text_width) / 2
         canvas.drawString(x, y, self.diagram.caption)
         canvas.restoreState()

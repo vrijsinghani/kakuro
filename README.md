@@ -118,14 +118,10 @@ python -c "from src.puzzle_generation.generator import generate_kakuro; print(ge
 ### Generate a Complete Book
 
 ```bash
-# Generate 500 beginner puzzles
-python scripts/batch_generation/generate_puzzles.py --difficulty beginner --count 500
+# Build the example book
+python -m src.book_builder build beginner-to-expert-250
 
-# Create interior PDF
-python scripts/batch_generation/create_interior.py --puzzles output/puzzles/beginner/ --output output/books/interiors/
-
-# Validate PDF for KDP compliance
-python scripts/quality_control/validate_book.py --interior output/books/interiors/kakuro_beginner_500_interior_v1.pdf
+# See src/book_builder/README.md for creating your own books.
 ```
 
 ## Development
@@ -163,9 +159,9 @@ flake8 src/ tests/
 
 ### Phase 1: Core Functionality (Current)
 - [x] Basic puzzle generation algorithm
-- [ ] ReportLab PDF generation
-- [ ] Interior page layouts
-- [ ] Solution page generation
+- [x] ReportLab PDF generation
+- [x] Interior page layouts
+- [x] Solution page generation
 - [ ] Instruction page templates
 
 ### Phase 2: Quality & Automation

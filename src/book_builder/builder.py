@@ -6,23 +6,65 @@ from YAML configuration files.
 """
 
 import logging
+import subprocess
+import shutil
 from pathlib import Path
 from typing import Optional
 
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Spacer,
-    PageBreak,
-)
-from reportlab.lib.units import inch
-
-from .config import BookConfig
-from .chapter_renderer import ChapterRenderer
+from .config import BookConfig, PartHeaderConfig, ChapterConfig, PuzzleSectionConfig
+from .document import BookDocument
 
 logger = logging.getLogger(__name__)
 
 # Base directory for all books
 BOOKS_DIR = Path(__file__).parent.parent.parent / "books"
+
+
+def embed_fonts(input_pdf: Path) -> Path:
+    """Post-process PDF to embed all fonts using Ghostscript.
+
+    Args:
+        input_pdf: Path to the input PDF file.
+
+    Returns:
+        Path to the processed PDF (same file, modified in place).
+
+    Raises:
+        RuntimeError: If Ghostscript is not available or fails.
+    """
+    # Check if Ghostscript is available
+    gs_path = shutil.which("gs")
+    if not gs_path:
+        raise RuntimeError(
+            "Ghostscript (gs) not found. Install it with: sudo apt install ghostscript"
+        )
+
+    # Create temp output file
+    output_pdf = input_pdf.with_suffix(".embedded.pdf")
+
+    cmd = [
+        gs_path,
+        "-dNOPAUSE",
+        "-dBATCH",
+        "-sDEVICE=pdfwrite",
+        "-dEmbedAllFonts=true",
+        "-dSubsetFonts=true",
+        "-dPDFSETTINGS=/prepress",
+        f"-sOutputFile={output_pdf}",
+        str(input_pdf),
+    ]
+
+    logger.info("Embedding fonts with Ghostscript...")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise RuntimeError(f"Ghostscript failed: {result.stderr}")
+
+    # Replace original with embedded version
+    output_pdf.replace(input_pdf)
+    logger.info("Fonts embedded successfully")
+
+    return input_pdf
 
 
 def get_book_dir(book_id: str) -> Path:
@@ -48,9 +90,6 @@ def build_book(book_id: str, output_path: Optional[Path] = None) -> Path:
     Returns:
         Path to the generated PDF.
     """
-    from .assembler import BookAssembler
-    from .puzzle_flowable import PuzzleFlowable, SolutionFlowable
-
     book_dir = get_book_dir(book_id)
     config_path = book_dir / "book.yaml"
 
@@ -58,130 +97,48 @@ def build_book(book_id: str, output_path: Optional[Path] = None) -> Path:
         raise FileNotFoundError(f"Book configuration not found: {config_path}")
 
     config = BookConfig.from_yaml(config_path)
-
-    if output_path is None:
-        output_dir = book_dir / "output"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / "interior.pdf"
-
     cache_dir = book_dir / "output" / "puzzles"
 
     logger.info(f"Building book: {config.metadata.title}")
 
-    # Initialize assembler
-    assembler = BookAssembler(config, book_dir)
-
-    # Build document
-    doc = _create_document(output_path, config)
-    flowables = []
-    all_puzzles = []  # (puzzle_num, puzzle) for solutions
+    # Create document using new BookDocument class
+    doc = BookDocument(config, book_dir)
 
     # Front matter
-    flowables.extend(assembler.build_title_page())
-    flowables.extend(assembler.build_copyright_page())
+    doc.add_title_page()
+    doc.add_copyright_page()
 
-    # Chapters (Part 1)
-    flowables.extend(assembler.build_section_header("Part 1: How to Play"))
+    # TOC placeholder (if configured)
+    for item in config.content.front_matter:
+        if item.type == "toc":
+            doc.add_toc_placeholder()
+            break
 
-    renderer = ChapterRenderer(config, book_dir)
-    for chapter_config in config.content.chapters:
-        chapter_path = book_dir / chapter_config.path
-        if not chapter_path.exists():
-            logger.warning(f"Chapter not found: {chapter_path}")
-            continue
+    # Process body content
+    for item in config.content.body:
+        if isinstance(item, PartHeaderConfig):
+            doc.add_section_header(item.title)
+        elif isinstance(item, ChapterConfig):
+            doc.add_chapter(Path(item.path), item.title)
+        elif isinstance(item, PuzzleSectionConfig):
+            doc.add_puzzle_section(item, cache_dir)
 
-        logger.info(f"Rendering chapter: {chapter_config.title}")
-        chapter_flowables = renderer.render_chapter(chapter_path, chapter_config.title)
-        flowables.extend(chapter_flowables)
-        flowables.append(PageBreak())
+    # Back matter
+    for item in config.content.back_matter:
+        if item.type == "solutions":
+            doc.add_solutions()
+        elif item.type == "about_author":
+            about_path = Path(item.path) if item.path else None
+            doc.add_about_author(about_path)
+        elif item.type == "notes":
+            doc.add_notes_pages()
 
-    # Puzzle sections
-    puzzle_num = 1
-    max_puzzle_width = (
-        config.page_width_points
-        - (config.layout.margins.left + config.layout.margins.right) * 72
-    )
-    max_puzzle_height = (
-        config.page_height_points
-        - (config.layout.margins.top + config.layout.margins.bottom) * 72
-    )
+    # Finalize TOC and save
+    doc.finalize_toc()
+    pdf_path = doc.save(output_path)
 
-    # Map difficulty to display name
-    difficulty_labels = {
-        "beginner": "Beginner",
-        "intermediate": "Intermediate",
-        "expert": "Expert",
-    }
-
-    for section in config.content.puzzle_sections:
-        # Section header
-        flowables.extend(assembler.build_section_header(section.title))
-
-        # Generate puzzles
-        puzzles = assembler.generate_puzzles_for_section(section, cache_dir)
-
-        difficulty_label = difficulty_labels.get(
-            section.difficulty, section.difficulty.title()
-        )
-
-        # Add puzzles as flowables
-        for puzzle in puzzles:
-            pf = PuzzleFlowable(
-                puzzle=puzzle,
-                puzzle_number=puzzle_num,
-                difficulty=difficulty_label,
-                max_width=max_puzzle_width,
-                max_height=max_puzzle_height,
-                show_rules=True,
-            )
-            flowables.append(pf)
-            flowables.append(PageBreak())
-
-            all_puzzles.append((puzzle_num, puzzle, difficulty_label))
-            puzzle_num += 1
-
-    # Solutions section
-    if all_puzzles:
-        flowables.extend(assembler.build_section_header("Solutions"))
-
-        # Add solutions in rows (multiple per page)
-        from reportlab.platypus import Table
-
-        solutions_per_row = 3
-        solution_col_width = max_puzzle_width / solutions_per_row
-        # Allow some height per row (page height / ~4 rows per page)
-        solution_row_height = (max_puzzle_height - 40) / 4
-
-        for i in range(0, len(all_puzzles), solutions_per_row):
-            row_puzzles = all_puzzles[i : i + solutions_per_row]
-            row_flowables = []
-
-            for num, puzzle, _ in row_puzzles:  # Unpack with difficulty ignored
-                sf = SolutionFlowable(
-                    puzzle=puzzle,
-                    puzzle_number=num,
-                    max_cell_size=14,
-                    max_width=solution_col_width - 10,  # Padding
-                    max_height=solution_row_height - 10,
-                )
-                row_flowables.append(sf)
-
-            # Pad row if needed
-            while len(row_flowables) < solutions_per_row:
-                row_flowables.append(Spacer(1, 1))
-
-            # Create table for row
-            table = Table(
-                [row_flowables], colWidths=[solution_col_width] * solutions_per_row
-            )
-            flowables.append(table)
-            flowables.append(Spacer(1, 10))
-
-    # Build the PDF
-    doc.build(flowables, onFirstPage=_add_page_number, onLaterPages=_add_page_number)
-    logger.info(f"Book saved to: {output_path}")
-
-    return output_path
+    # Post-process to embed all fonts for KDP compliance
+    return embed_fonts(pdf_path)
 
 
 def build_chapters_only(book_id: str, output_path: Optional[Path] = None) -> Path:
@@ -209,73 +166,52 @@ def build_chapters_only(book_id: str, output_path: Optional[Path] = None) -> Pat
 
     logger.info(f"Building chapters for: {config.metadata.title}")
 
-    # Build document
-    doc = _create_document(output_path, config)
-    flowables = []
+    # Create document using BookDocument class (chapters only)
+    doc = BookDocument(config, book_dir)
 
-    # Add chapters
-    renderer = ChapterRenderer(config, book_dir)
-    for chapter_config in config.content.chapters:
-        chapter_path = book_dir / chapter_config.path
-        if not chapter_path.exists():
-            logger.warning(f"Chapter not found: {chapter_path}")
-            continue
+    # Add chapters directly (no front matter or section headers)
+    for item in config.content.body:
+        if isinstance(item, ChapterConfig):
+            doc.add_chapter(Path(item.path), item.title)
 
-        logger.info(f"Rendering chapter: {chapter_config.title}")
-        chapter_flowables = renderer.render_chapter(chapter_path, chapter_config.title)
-        flowables.extend(chapter_flowables)
-        flowables.append(PageBreak())
-
-    # Build the PDF with page numbers
-    doc.build(flowables, onFirstPage=_add_page_number, onLaterPages=_add_page_number)
-    logger.info(f"Chapters saved to: {output_path}")
-
-    return output_path
+    return doc.save(output_path)
 
 
-def _create_document(output_path: Path, config: BookConfig) -> SimpleDocTemplate:
-    """Create a ReportLab document with proper page settings.
+def build_puzzles_only(book_id: str, output_path: Optional[Path] = None) -> Path:
+    """Build only the puzzle sections (no chapters).
 
     Args:
-        output_path: Path for the output PDF.
-        config: Book configuration.
+        book_id: Book identifier.
+        output_path: Optional output path.
 
     Returns:
-        Configured SimpleDocTemplate.
+        Path to the generated PDF.
     """
-    page_width = config.page_width_points
-    page_height = config.page_height_points
-    margins = config.layout.margins
+    book_dir = get_book_dir(book_id)
+    config_path = book_dir / "book.yaml"
 
-    doc = SimpleDocTemplate(
-        str(output_path),
-        pagesize=(page_width, page_height),
-        leftMargin=margins.left * inch,
-        rightMargin=margins.right * inch,
-        topMargin=margins.top * inch,
-        bottomMargin=margins.bottom * inch,
-        title=config.metadata.title,
-        author=config.metadata.author,
-    )
+    if not config_path.exists():
+        raise FileNotFoundError(f"Book configuration not found: {config_path}")
 
-    return doc
+    config = BookConfig.from_yaml(config_path)
+    cache_dir = book_dir / "output" / "puzzles"
 
+    if output_path is None:
+        output_dir = book_dir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / "puzzles_only.pdf"
 
-def _add_page_number(canvas, doc):
-    """Add page number to bottom center of each page.
+    logger.info(f"Building puzzles for: {config.metadata.title}")
 
-    Args:
-        canvas: ReportLab canvas.
-        doc: Document being built.
-    """
-    page_num = canvas.getPageNumber()
-    text = str(page_num)
+    # Create document using BookDocument class (puzzles only)
+    doc = BookDocument(config, book_dir)
 
-    canvas.saveState()
-    canvas.setFont("Helvetica", 11)
+    # Add puzzle sections
+    for item in config.content.body:
+        if isinstance(item, PuzzleSectionConfig):
+            doc.add_puzzle_section(item, cache_dir)
 
-    # Bottom center
-    page_width = doc.pagesize[0]
-    canvas.drawCentredString(page_width / 2, 0.5 * inch, text)
+    # Add solutions
+    doc.add_solutions()
 
-    canvas.restoreState()
+    return doc.save(output_path)

@@ -9,6 +9,7 @@ from reportlab.platypus import Flowable
 from reportlab.lib.colors import HexColor
 
 from .diagram_models import ReferenceTableDefinition, CARD_COLORS
+from .config import DEFAULT_FONTS
 
 
 class ReferenceTableFlowable(Flowable):
@@ -113,9 +114,9 @@ class ReferenceTableFlowable(Flowable):
     def _draw_title(self, canvas, y):
         """Draw the main title."""
         canvas.setFillColor(HexColor("#333333"))
-        canvas.setFont("Helvetica-Bold", self.TITLE_FONT_SIZE)
+        canvas.setFont(DEFAULT_FONTS["heading"], self.TITLE_FONT_SIZE)
         title_width = canvas.stringWidth(
-            self.table.title, "Helvetica-Bold", self.TITLE_FONT_SIZE
+            self.table.title, DEFAULT_FONTS["heading"], self.TITLE_FONT_SIZE
         )
         x = (self.width - title_width) / 2
         canvas.drawString(x, y, self.table.title)
@@ -125,9 +126,9 @@ class ReferenceTableFlowable(Flowable):
         # Section title
         y_cursor -= 22
         canvas.setFillColor(HexColor("#2E7D32"))  # Green
-        canvas.setFont("Helvetica-Bold", self.SECTION_TITLE_FONT_SIZE)
+        canvas.setFont(DEFAULT_FONTS["heading"], self.SECTION_TITLE_FONT_SIZE)
         title_width = canvas.stringWidth(
-            section.title, "Helvetica-Bold", self.SECTION_TITLE_FONT_SIZE
+            section.title, DEFAULT_FONTS["heading"], self.SECTION_TITLE_FONT_SIZE
         )
         x = (self.width - title_width) / 2
         canvas.drawString(x, y_cursor, section.title)
@@ -164,16 +165,18 @@ class ReferenceTableFlowable(Flowable):
         # Sum label
         sum_text = f"Sum: {card.sum_value}"
         canvas.setFillColor(HexColor(colors["sum"]))
-        canvas.setFont("Helvetica-Bold", self.SUM_FONT_SIZE)
-        sum_width = canvas.stringWidth(sum_text, "Helvetica-Bold", self.SUM_FONT_SIZE)
+        canvas.setFont(DEFAULT_FONTS["heading"], self.SUM_FONT_SIZE)
+        sum_width = canvas.stringWidth(
+            sum_text, DEFAULT_FONTS["heading"], self.SUM_FONT_SIZE
+        )
         sum_x = x + (self.CARD_WIDTH - sum_width) / 2
         canvas.drawString(sum_x, y + self.CARD_HEIGHT - 18, sum_text)
 
         # Combination
         canvas.setFillColor(HexColor(colors["combo"]))
-        canvas.setFont("Helvetica", self.COMBO_FONT_SIZE)
+        canvas.setFont(DEFAULT_FONTS["body"], self.COMBO_FONT_SIZE)
         combo_width = canvas.stringWidth(
-            card.combination, "Helvetica", self.COMBO_FONT_SIZE
+            card.combination, DEFAULT_FONTS["body"], self.COMBO_FONT_SIZE
         )
         combo_x = x + (self.CARD_WIDTH - combo_width) / 2
         canvas.drawString(combo_x, y + 10, card.combination)
@@ -184,10 +187,10 @@ class ReferenceTableFlowable(Flowable):
             return
 
         canvas.setFillColor(HexColor("#666666"))
-        canvas.setFont("Helvetica-Oblique", 9)
+        canvas.setFont(DEFAULT_FONTS["caption"], 9)
         # Center the footer
         footer_width = canvas.stringWidth(
-            self.table.footer_note, "Helvetica-Oblique", 9
+            self.table.footer_note, DEFAULT_FONTS["caption"], 9
         )
         x = (self.width - footer_width) / 2
         canvas.drawString(x, y, self.table.footer_note)

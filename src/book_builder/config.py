@@ -1,14 +1,20 @@
-"""
-Configuration models for book building.
-
-This module defines Pydantic models for parsing and validating
-book.yaml configuration files.
-"""
+"""Book builder configuration models and defaults."""
 
 from pathlib import Path
-from typing import Optional, Literal
-from pydantic import BaseModel, Field
+from typing import Optional, Literal, Union
 import yaml
+from pydantic import BaseModel, Field
+
+
+# Default embeddable fonts
+DEFAULT_FONTS = {
+    "body": "NotoSans-Regular",
+    "heading": "NotoSans-Bold",
+    "puzzle": "NotoSans-Regular",
+    "caption": "NotoSans-Regular",  # Replaces Helvetica-Oblique
+    # Symbol is usually built-in but we should use a unicode font ideally
+    "symbol": "Symbol",
+}
 
 
 class MetadataConfig(BaseModel):
@@ -20,9 +26,17 @@ class MetadataConfig(BaseModel):
     isbn: Optional[str] = None
 
 
+class PartHeaderConfig(BaseModel):
+    """Part header configuration."""
+
+    type: Literal["part_header"] = "part_header"
+    title: str
+
+
 class ChapterConfig(BaseModel):
     """Chapter configuration."""
 
+    type: Literal["chapter"] = "chapter"
     path: str
     title: str
 
@@ -30,7 +44,8 @@ class ChapterConfig(BaseModel):
 class PuzzleSectionConfig(BaseModel):
     """Puzzle section configuration."""
 
-    title: str
+    type: Literal["puzzle_section"] = "puzzle_section"
+    title: Optional[str] = None
     difficulty: Literal["beginner", "intermediate", "expert"]
     count: int
     grid_sizes: list[int] = Field(default_factory=lambda: [9, 10, 11])
@@ -53,8 +68,9 @@ class ContentConfig(BaseModel):
     """Content structure configuration."""
 
     front_matter: list[FrontMatterItem] = Field(default_factory=list)
-    chapters: list[ChapterConfig] = Field(default_factory=list)
-    puzzle_sections: list[PuzzleSectionConfig] = Field(default_factory=list)
+    body: list[Union[PartHeaderConfig, ChapterConfig, PuzzleSectionConfig]] = Field(
+        default_factory=list
+    )
     back_matter: list[BackMatterItem] = Field(default_factory=list)
 
 
@@ -80,9 +96,9 @@ class LayoutConfig(BaseModel):
 class FontsConfig(BaseModel):
     """Font configuration."""
 
-    body: str = "Helvetica"
-    heading: str = "Helvetica-Bold"
-    puzzle: str = "Helvetica"
+    body: str = DEFAULT_FONTS["body"]
+    heading: str = DEFAULT_FONTS["heading"]
+    puzzle: str = DEFAULT_FONTS["puzzle"]
 
 
 class BookConfig(BaseModel):
@@ -126,3 +142,30 @@ class BookConfig(BaseModel):
             return 841.89
         else:
             return self.layout.page_size[1] * 72
+
+    def validate_files(self, book_dir: Path) -> list[str]:
+        """Validate that all referenced files exist.
+
+        Args:
+            book_dir: Base directory of the book.
+
+        Returns:
+            List of error messages for missing files.
+        """
+        errors = []
+
+        # Validate body files (chapters only)
+        for item in self.content.body:
+            if isinstance(item, ChapterConfig):
+                chapter_path = book_dir / item.path
+                if not chapter_path.exists():
+                    errors.append(f"Chapter file not found: {item.path}")
+
+        # Validate back matter files
+        for item in self.content.back_matter:
+            if item.path:
+                item_path = book_dir / item.path
+                if not item_path.exists():
+                    errors.append(f"Back matter file not found: {item.path}")
+
+        return errors

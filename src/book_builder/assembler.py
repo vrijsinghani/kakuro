@@ -20,7 +20,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_CENTER
 
-from .config import BookConfig, PuzzleSectionConfig
+from .config import BookConfig, PuzzleSectionConfig, DEFAULT_FONTS
 from .chapter_renderer import ChapterRenderer
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class BookAssembler:
 
         title_style = ParagraphStyle(
             "BookTitle",
-            fontName="Helvetica-Bold",
+            fontName=DEFAULT_FONTS["heading"],
             fontSize=32,
             leading=38,
             alignment=TA_CENTER,
@@ -58,7 +58,7 @@ class BookAssembler:
 
         subtitle_style = ParagraphStyle(
             "BookSubtitle",
-            fontName="Helvetica",
+            fontName=DEFAULT_FONTS["body"],
             fontSize=18,
             leading=24,
             alignment=TA_CENTER,
@@ -68,7 +68,7 @@ class BookAssembler:
 
         author_style = ParagraphStyle(
             "BookAuthor",
-            fontName="Helvetica",
+            fontName=DEFAULT_FONTS["body"],
             fontSize=14,
             leading=20,
             alignment=TA_CENTER,
@@ -100,7 +100,7 @@ class BookAssembler:
 
         style = ParagraphStyle(
             "Copyright",
-            fontName="Helvetica",
+            fontName=DEFAULT_FONTS["body"],
             fontSize=10,
             leading=14,
             alignment=TA_CENTER,
@@ -139,7 +139,7 @@ class BookAssembler:
 
         style = ParagraphStyle(
             "SectionHeader",
-            fontName="Helvetica-Bold",
+            fontName=DEFAULT_FONTS["heading"],
             fontSize=28,
             leading=34,
             alignment=TA_CENTER,
@@ -166,7 +166,11 @@ class BookAssembler:
         """
         from src.puzzle_generation import generate_puzzle, Puzzle
 
-        cache_file = cache_dir / f"{section.difficulty}_{section.count}.json"
+        # Create a unique cache key including grid sizes
+        grid_size_str = "_".join(map(str, sorted(set(section.grid_sizes))))
+        cache_file = (
+            cache_dir / f"{section.difficulty}_{section.count}_{grid_size_str}.json"
+        )
 
         # Try to load from cache
         if cache_file.exists():
@@ -199,7 +203,8 @@ class BookAssembler:
                     height=size,
                     width=size,
                     black_density=density,
-                    max_attempts=20,
+                    max_attempts=50,  # More attempts for strict enforcement
+                    min_size=(size, size),  # Enforce exact minimum size
                 )
                 puzzles.append(puzzle)
 

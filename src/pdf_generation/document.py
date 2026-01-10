@@ -14,6 +14,7 @@ from reportlab.pdfgen.canvas import Canvas
 from src.puzzle_generation import Puzzle
 from .models import BookConfig
 from .page_builder import build_puzzle_page, build_solution_page
+from .compliance import apply_compliance
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +26,18 @@ class PDFDocument:
         self,
         output_path: Union[str, Path],
         config: BookConfig = None,
+        is_compliant: bool = True,
     ):
         """Initialize a new PDF document.
 
         Args:
             output_path: Path where the PDF will be saved.
             config: Book configuration. Uses defaults if not provided.
+            is_compliant: Whether to apply PDF/X-1a compliance settings.
         """
         self.output_path = Path(output_path)
         self.config = config or BookConfig()
+        self.is_compliant = is_compliant
         self.layout = self.config.layout
 
         # Create the canvas
@@ -106,8 +110,10 @@ class PDFDocument:
         """Add a section header page."""
         page_width, page_height = self.layout.page_size
 
-        self.canvas.setFont("Helvetica-Bold", 24)
-        text_width = self.canvas.stringWidth(title, "Helvetica-Bold", 24)
+        from src.book_builder.config import DEFAULT_FONTS
+
+        self.canvas.setFont(DEFAULT_FONTS["heading"], 24)
+        text_width = self.canvas.stringWidth(title, DEFAULT_FONTS["heading"], 24)
         x = (page_width - text_width) / 2
         y = page_height / 2
 
@@ -129,6 +135,10 @@ class PDFDocument:
         # Render solution pages if configured
         if self.config.include_solutions and self._puzzles:
             self._render_solution_pages()
+
+        # Apply PDF/X compliance settings
+        if self.is_compliant:
+            apply_compliance(self.canvas, self.config.title, self.config.author)
 
         # Save the document
         self.canvas.save()
