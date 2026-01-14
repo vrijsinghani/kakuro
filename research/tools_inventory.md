@@ -91,17 +91,23 @@ df = pytrends.interest_over_time()
 **Recommendation:** Build a simple Python script using KDP's published formulas:
 
 ```python
-def calculate_royalty(list_price: float, page_count: int, 
+def calculate_royalty(list_price: float, page_count: int,
                       is_large_trim: bool = True) -> float:
-    """Calculate KDP royalty for B&W paperback."""
-    fixed_cost = 0.85 if is_large_trim else 1.00
-    per_page = 0.012
+    """
+    Calculate KDP royalty for B&W paperback (110-828 pages).
+
+    Per-page rates (Amazon.com, Black Ink):
+    - Regular trim (≤6.12" × ≤9"): $0.012/page
+    - Large trim (>6.12" or >9"): $0.017/page
+    """
+    fixed_cost = 1.00
+    per_page = 0.017 if is_large_trim else 0.012
     print_cost = fixed_cost + (page_count * per_page)
     royalty = (list_price * 0.60) - print_cost
     return max(royalty, 0)
 
-# Example: 300-page book at $12.99
-print(calculate_royalty(12.99, 300))  # ~$2.94
+# Example: 327-page large-trim book at $14.99
+print(calculate_royalty(14.99, 327))  # ~$2.43
 ```
 
 ---
