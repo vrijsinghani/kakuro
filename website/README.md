@@ -1,73 +1,87 @@
-# React + TypeScript + Vite
+# Master Kakuro Website
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the official landing page for the **Master Kakuro** puzzle book series. The website is built to showcase the books, highlight the cognitive benefits of solving Kakuro puzzles, and provide a premium user experience for potential readers.
 
-Currently, two official plugins are available:
+## 🚀 Technology Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Framework**: [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Utilities**: `clsx`, `tailwind-merge`
 
-## React Compiler
+## 🛠️ Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Follow these steps to get the project running on your local machine.
 
-## Expanding the ESLint configuration
+### Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [Node.js](https://nodejs.org/) (Latest LTS version recommended)
+- `npm` (comes with Node.js)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Installation
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. Clone the repository (if you haven't already):
+   ```bash
+   git clone <repository-url>
+   cd website
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Running Locally
+
+Start the development server with Hot Module Replacement (HMR):
+
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The site will be available at `http://localhost:5173` (or another port if 5173 is busy).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Building for Production
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+To create a production-ready build:
+
+```bash
+npm run build
 ```
+
+The output will be generated in the `dist` directory. You can preview this build locally using:
+
+```bash
+npm run preview
+```
+
+## 📂 Project Structure
+
+```
+website/
+├── public/              # Static assets (favicons, images, etc.)
+├── src/
+│   ├── components/      # Reusable UI components
+│   ├── sections/        # Page sections (Hero, Science, Features, etc.)
+│   ├── App.tsx          # Main application component
+│   ├── index.css        # Global styles and Tailwind imports
+│   └── main.tsx         # Application entry point
+├── index.html           # HTML entry point
+├── package.json         # Project metadata and dependencies
+├── vite.config.ts       # Vite configuration
+└── README.md            # Project documentation
+```
+
+## ✨ Key Features
+
+- **Modern Aesthetic**: Clean, responsive design focused on readability and user engagement.
+- **Science-Backed**: Dedicated sections explaining the cognitive benefits of logic puzzles.
+- **Performance**: Optimized build using Vite for fast load times.
+- **Responsive**: Fully responsive layouts ensuring a great experience on mobile, tablet, and desktop.
+
+## 🤝 Contributing
+
+1. Ensure your code follows the existing style (ESLint and TypeScript configs are included).
+2. Run `npm run lint` to catch any issues before committing.
+3. Make sure all new components are responsive and accessible.
