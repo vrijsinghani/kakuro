@@ -42,9 +42,14 @@ function App() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <button className="px-8 py-4 bg-bronze hover:bg-bronze-dark text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 transform hover:-translate-y-1">
+              <a
+                href="https://a.co/d/2NnLQW7"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-8 py-4 bg-bronze hover:bg-bronze-dark text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 transform hover:-translate-y-1"
+              >
                 Buy on Amazon <ArrowRight className="w-5 h-5" />
-              </button>
+              </a>
               <button
                 onClick={() => setShowPreview(true)}
                 className="px-8 py-4 bg-cream border-2 border-bronze text-bronze-dark hover:bg-bronze/5 rounded-full font-semibold text-lg transition-all flex items-center justify-center gap-2"
@@ -236,7 +241,7 @@ function App() {
             Order your copy today and rediscover the joy of analog puzzle solving.
           </p>
           <a
-            href="#"
+            href="https://a.co/d/2NnLQW7"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-3 bg-bronze text-forest font-bold px-10 py-4 rounded-xl shadow-lg hover:bg-bronze-dark hover:text-white hover:-translate-y-1 transition-all duration-300"
