@@ -50,11 +50,21 @@ To create a production-ready build:
 npm run build
 ```
 
-The output will be generated in the `dist` directory. You can preview this build locally using:
+The output will be generated in the `dist` directory.
+
+### Self-Hosting (Production)
+
+Since this is a Single Page Application (SPA), you need a static file server that redirects all requests to `index.html`.
+
+The easiest way to serve the `dist` folder is using `serve`:
 
 ```bash
-npm run preview
+npx serve -s dist
 ```
+
+- `npx`: Runs the package without installing it globally.
+- `serve`: A static file server.
+- `-s` (or `--single`): Rewrites all 404 requests to `index.html`, which is required for React Router to work properly.
 
 ## 📂 Project Structure
 
